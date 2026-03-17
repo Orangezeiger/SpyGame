@@ -49,6 +49,28 @@
                 <p><strong>Lobby:</strong> <span id="roomIdLabel">-</span></p>
                 <p><strong>Rolle:</strong> <span id="hostLabel">Spieler</span></p>
             </div>
+            <div class="settings-panel">
+                <div class="setting-field">
+                    <label for="minutesSelect">Spieldauer</label>
+                    <select id="minutesSelect">
+                        <option value="3">3 Minuten</option>
+                        <option value="5">5 Minuten</option>
+                        <option value="8" selected>8 Minuten</option>
+                        <option value="10">10 Minuten</option>
+                        <option value="12">12 Minuten</option>
+                        <option value="15">15 Minuten</option>
+                    </select>
+                </div>
+                <div class="setting-field">
+                    <label for="imposterSelect">Imposter</label>
+                    <select id="imposterSelect">
+                        <option value="1">1 Imposter</option>
+                        <option value="2">2 Imposter</option>
+                        <option value="3">3 Imposter</option>
+                    </select>
+                </div>
+            </div>
+            <p id="settingsHint" class="hint">Mindestens 3 Spieler. Ab 5 Spielern sind 2 Imposter moeglich, ab 7 Spielern 3.</p>
             <div class="room-code-box">
                 <span id="roomCodeLarge">------</span>
                 <button id="copyRoomBtn" class="secondary-button">Nummer kopieren</button>

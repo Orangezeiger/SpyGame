@@ -119,6 +119,8 @@ public class RoomService {
                         player.getId().equals(room.getHostPlayerId())
                 ))
                 .toList();
+        int maxImposters = maxImposterCount(room.getPlayers().size());
+        int effectiveImposterCount = Math.min(room.getImposterCount(), maxImposters);
         return new RoomStateResponse(
                 roomId,
                 room.isStarted(),
@@ -127,8 +129,8 @@ public class RoomService {
                 room.getStartedAtEpochMillis(),
                 room.getGameDurationMinutes() * 60,
                 room.getGameDurationMinutes(),
-                room.getImposterCount(),
-                maxImposterCount(room.getPlayers().size()),
+                effectiveImposterCount,
+                maxImposters,
                 MIN_PLAYERS_TO_START,
                 players
         );
@@ -184,6 +186,8 @@ public class RoomService {
             if (playerId.equals(room.getHostPlayerId())) {
                 room.setHostPlayerId(room.getPlayers().get(0).getId());
             }
+
+            room.setImposterCount(Math.min(room.getImposterCount(), maxImposterCount(room.getPlayers().size())));
         }
     }
 

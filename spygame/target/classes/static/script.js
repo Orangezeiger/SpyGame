@@ -23,12 +23,15 @@ const lobbyStateText = document.getElementById("lobbyStateText");
 const roleLabel = document.getElementById("roleLabel");
 const wordLabel = document.getElementById("wordLabel");
 const timerLabel = document.getElementById("timerLabel");
+const settingsHint = document.getElementById("settingsHint");
 const logEl = document.getElementById("log");
 const playersList = document.getElementById("playersList");
 const startGameBtn = document.getElementById("startGameBtn");
 const createPlayerNameInput = document.getElementById("createPlayerName");
 const joinPlayerNameInput = document.getElementById("joinPlayerName");
 const roomIdInput = document.getElementById("roomIdInput");
+const minutesSelect = document.getElementById("minutesSelect");
+const imposterSelect = document.getElementById("imposterSelect");
 
 function log(message) {
   const ts = new Date().toLocaleTimeString();
@@ -55,6 +58,27 @@ function updateRoomLabels() {
 
 function sanitizeRoomId(value) {
   return value.replace(/\D/g, "").slice(0, 6);
+}
+
+function clampImposterOptions(maxImposterCount, selectedCount) {
+  Array.from(imposterSelect.options).forEach((option) => {
+    const optionValue = Number(option.value);
+    option.disabled = optionValue > maxImposterCount;
+  });
+  imposterSelect.value = String(Math.min(selectedCount, maxImposterCount));
+}
+
+async function updateRoomSettings() {
+  if (!state.roomId || !state.playerId) {
+    return;
+  }
+  const data = await postJson("/room-settings", {
+    roomId: state.roomId,
+    playerId: state.playerId,
+    gameDurationMinutes: Number(minutesSelect.value),
+    imposterCount: Number(imposterSelect.value),
+  });
+  return data;
 }
 
 async function postJson(url, body) {
@@ -179,12 +203,21 @@ async function syncRoomState() {
   updateRoomLabels();
   renderPlayers(data.players, data.hostPlayerId);
   hostLabel.textContent = data.host ? "Host" : "Spieler";
-  startGameBtn.disabled = !data.host;
-  startGameBtn.textContent = data.host ? "Spiel starten" : "Nur Host kann starten";
+  minutesSelect.value = String(data.gameDurationMinutes);
+  clampImposterOptions(data.maxImposterCount, data.imposterCount);
+  minutesSelect.disabled = !data.host || data.started;
+  imposterSelect.disabled = !data.host || data.started;
+  settingsHint.textContent = `Mindestens ${data.minPlayersToStart} Spieler. Aktuell sind ${data.players.length} da. Maximal ${data.maxImposterCount} Imposter moeglich.`;
+  startGameBtn.disabled = !data.host || data.players.length < data.minPlayersToStart;
+  startGameBtn.textContent = !data.host
+    ? "Nur Host kann starten"
+    : data.players.length < data.minPlayersToStart
+      ? `Noch ${data.minPlayersToStart - data.players.length} Spieler fehlen`
+      : "Spiel starten";
   lobbyStateText.textContent = data.started
     ? "Spiel startet gerade fuer alle Spieler..."
     : data.host
-      ? "Du bist Host. Starte, sobald genug Spieler da sind."
+      ? "Du bist Host. Stelle Dauer und Imposter ein und starte, sobald genug Spieler da sind."
       : "Warte, bis der Host das Spiel startet.";
 
   if (data.started) {
@@ -330,6 +363,24 @@ document.getElementById("copyRoomBtn").addEventListener("click", copyRoomId);
 document.getElementById("copyRoomBtnGame").addEventListener("click", copyRoomId);
 document.getElementById("refreshLobbyBtn").addEventListener("click", () => {
   syncRoomState().catch(handleRoomStateError);
+});
+minutesSelect.addEventListener("change", async () => {
+  try {
+    await updateRoomSettings();
+    log(`Spieldauer auf ${minutesSelect.value} Minuten gesetzt.`);
+    await syncRoomState();
+  } catch (error) {
+    log(error.message);
+  }
+});
+imposterSelect.addEventListener("change", async () => {
+  try {
+    await updateRoomSettings();
+    log(`Imposter-Anzahl auf ${imposterSelect.value} gesetzt.`);
+    await syncRoomState();
+  } catch (error) {
+    log(error.message);
+  }
 });
 roomIdInput.addEventListener("input", () => {
   roomIdInput.value = sanitizeRoomId(roomIdInput.value);

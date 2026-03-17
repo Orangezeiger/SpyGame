@@ -14,6 +14,13 @@
     --panel: #181818;
 }
 
+html {
+    background:
+        radial-gradient(circle at top left, rgba(199, 24, 24, 0.18), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(255, 120, 120, 0.1), transparent 28%),
+        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+}
+
 body {
     margin: 0;
     font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
@@ -87,6 +94,17 @@ input {
     font-size: 14px;
     background: #141414;
     color: var(--text);
+}
+
+select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #4a4a4a;
+    border-radius: 12px;
+    font-size: 14px;
+    background: #141414;
+    color: var(--text);
+    appearance: none;
 }
 
 .row {
@@ -197,6 +215,18 @@ button:disabled {
     margin-bottom: 14px;
 }
 
+.settings-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.setting-field label {
+    display: block;
+    margin-bottom: 8px;
+}
+
 .room-code-box {
     display: flex;
     align-items: center;
@@ -304,8 +334,20 @@ pre#log {
 
 @media (max-width: 600px) {
     .split-layout,
+    .settings-panel,
     .row {
         grid-template-columns: 1fr;
+    }
+    body {
+        overflow-x: hidden;
+    }
+    .container {
+        margin: 20px auto;
+        padding: 0 12px 28px;
+    }
+    .card {
+        padding: 16px;
+        border-radius: 16px;
     }
     .status {
         grid-template-columns: 1fr;
@@ -316,11 +358,26 @@ pre#log {
     }
     .game-topbar {
         justify-content: space-between;
+        gap: 8px;
+    }
+    .game-code-button {
+        min-width: 0;
+        flex: 1;
+    }
+    #gameRoomCode {
+        letter-spacing: 0.1em;
     }
     #roomCodeLarge {
         font-size: 24px;
+        letter-spacing: 0.14em;
     }
     h1 {
         font-size: 34px;
+    }
+    .role-text {
+        font-size: 24px;
+    }
+    .word-text {
+        font-size: 16px;
     }
 }

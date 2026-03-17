@@ -12,3 +12,4 @@ com/spygame/dto/RoomStateResponse$PlayerSummary.class
 com/spygame/dto/StartGameRequest.class
 com/spygame/dto/CreateRoomResponse.class
 com/spygame/model/Room.class
+com/spygame/dto/UpdateRoomSettingsRequest.class

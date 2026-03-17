@@ -1,6 +1,7 @@
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/SpyGameApplication.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/StartGameResponse.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/JoinRoomResponse.java
+/Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/UpdateRoomSettingsRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/service/RoomService.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/StartGameRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/CreateRoomRequest.java
