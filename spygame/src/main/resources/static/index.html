@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpyGame</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<main class="container">
+    <h1>SpyGame</h1>
+
+    <section class="card">
+        <label>
+            Dein Name
+            <input id="playerName" type="text" placeholder="z.B. Max" />
+        </label>
+        <div class="row">
+            <button id="createRoomBtn">Raum erstellen</button>
+            <input id="roomIdInput" type="text" placeholder="Raum-ID" />
+            <button id="joinRoomBtn">Beitreten</button>
+        </div>
+        <p class="hint">Tipp: Raum-ID teilen, damit andere beitreten.</p>
+    </section>
+
+    <section class="card">
+        <div class="row">
+            <button id="startGameBtn">Spiel starten</button>
+            <button id="showRoleBtn">Rolle anzeigen</button>
+        </div>
+        <div class="status">
+            <p><strong>Raum:</strong> <span id="roomIdLabel">-</span></p>
+            <p><strong>Player-ID:</strong> <span id="playerIdLabel">-</span></p>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Deine Rolle</h2>
+        <p id="roleLabel">Noch keine Rolle.</p>
+        <p id="wordLabel"></p>
+    </section>
+
+    <section class="card log">
+        <h2>Log</h2>
+        <pre id="log"></pre>
+    </section>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
