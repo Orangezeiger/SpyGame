@@ -9,6 +9,8 @@ public class Room {
     private boolean started;
     private String word;
     private String spyPlayerId;
+    private String hostPlayerId;
+    private long startedAtEpochMillis;
 
     public Room(String id) {
         this.id = id;
@@ -44,5 +46,21 @@ public class Room {
 
     public void setSpyPlayerId(String spyPlayerId) {
         this.spyPlayerId = spyPlayerId;
+    }
+
+    public String getHostPlayerId() {
+        return hostPlayerId;
+    }
+
+    public void setHostPlayerId(String hostPlayerId) {
+        this.hostPlayerId = hostPlayerId;
+    }
+
+    public long getStartedAtEpochMillis() {
+        return startedAtEpochMillis;
+    }
+
+    public void setStartedAtEpochMillis(long startedAtEpochMillis) {
+        this.startedAtEpochMillis = startedAtEpochMillis;
     }
 }

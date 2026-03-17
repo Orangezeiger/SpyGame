@@ -5,9 +5,9 @@ import com.spygame.dto.CreateRoomResponse;
 import com.spygame.dto.JoinRoomRequest;
 import com.spygame.dto.JoinRoomResponse;
 import com.spygame.dto.RoleResponse;
+import com.spygame.dto.RoomStateResponse;
 import com.spygame.dto.StartGameRequest;
 import com.spygame.dto.StartGameResponse;
-import com.spygame.dto.RoomPlayersResponse;
 import com.spygame.service.RoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,7 +40,7 @@ public class RoomController {
 
     @PostMapping("/start-game")
     public StartGameResponse startGame(@RequestBody StartGameRequest request) {
-        return roomService.startGame(request.getRoomId());
+        return roomService.startGame(request.getRoomId(), request.getPlayerId());
     }
 
     @GetMapping("/role")
@@ -48,9 +48,15 @@ public class RoomController {
         return roomService.getRole(playerId);
     }
 
-    @GetMapping("/room-players")
-    public RoomPlayersResponse roomPlayers(@RequestParam String roomId) {
-        return roomService.getRoomPlayers(roomId);
+    @GetMapping("/room-state")
+    public RoomStateResponse roomState(@RequestParam String roomId, @RequestParam(required = false) String playerId) {
+        return roomService.getRoomState(roomId, playerId);
+    }
+
+    @PostMapping("/leave-room")
+    public Map<String, String> leaveRoom(@RequestParam String playerId) {
+        roomService.leaveRoom(playerId);
+        return Map.of("status", "ok");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

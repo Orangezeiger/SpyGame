@@ -2,13 +2,13 @@ com/spygame/dto/RoleResponse.class
 com/spygame/dto/StartGameResponse.class
 com/spygame/controller/RoomController.class
 com/spygame/dto/CreateRoomRequest.class
-com/spygame/dto/RoomPlayersResponse.class
 com/spygame/SpyGameApplication.class
 com/spygame/model/Player.class
 com/spygame/service/RoomService.class
 com/spygame/dto/JoinRoomRequest.class
 com/spygame/dto/JoinRoomResponse.class
+com/spygame/dto/RoomStateResponse.class
+com/spygame/dto/RoomStateResponse$PlayerSummary.class
 com/spygame/dto/StartGameRequest.class
 com/spygame/dto/CreateRoomResponse.class
-com/spygame/dto/RoomPlayersResponse$PlayerInfo.class
 com/spygame/model/Room.class

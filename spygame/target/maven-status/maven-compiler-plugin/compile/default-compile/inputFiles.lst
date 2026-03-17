@@ -6,7 +6,7 @@
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/CreateRoomRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/controller/RoomController.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/RoleResponse.java
-/Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/RoomPlayersResponse.java
+/Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/RoomStateResponse.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/CreateRoomResponse.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/model/Room.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/JoinRoomRequest.java
