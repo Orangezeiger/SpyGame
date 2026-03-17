@@ -7,6 +7,7 @@ import com.spygame.dto.JoinRoomResponse;
 import com.spygame.dto.RoleResponse;
 import com.spygame.dto.StartGameRequest;
 import com.spygame.dto.StartGameResponse;
+import com.spygame.dto.RoomPlayersResponse;
 import com.spygame.service.RoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +46,11 @@ public class RoomController {
     @GetMapping("/role")
     public RoleResponse role(@RequestParam String playerId) {
         return roomService.getRole(playerId);
+    }
+
+    @GetMapping("/room-players")
+    public RoomPlayersResponse roomPlayers(@RequestParam String roomId) {
+        return roomService.getRoomPlayers(roomId);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

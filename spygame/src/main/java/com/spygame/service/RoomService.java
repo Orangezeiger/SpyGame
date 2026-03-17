@@ -3,6 +3,7 @@ package com.spygame.service;
 import com.spygame.dto.CreateRoomResponse;
 import com.spygame.dto.JoinRoomResponse;
 import com.spygame.dto.RoleResponse;
+import com.spygame.dto.RoomPlayersResponse;
 import com.spygame.dto.StartGameResponse;
 import com.spygame.model.Player;
 import com.spygame.model.Room;
@@ -91,6 +92,17 @@ public class RoomService {
             return new RoleResponse("SPY", null);
         }
         return new RoleResponse("PLAYER", room.getWord());
+    }
+
+    public RoomPlayersResponse getRoomPlayers(String roomId) {
+        Room room = rooms.get(roomId);
+        if (room == null) {
+            throw new IllegalArgumentException("Room not found");
+        }
+        List<RoomPlayersResponse.PlayerInfo> players = room.getPlayers().stream()
+                .map(player -> new RoomPlayersResponse.PlayerInfo(player.getId(), player.getName()))
+                .toList();
+        return new RoomPlayersResponse(roomId, players);
     }
 
     private String addPlayer(Room room, String playerName) {
