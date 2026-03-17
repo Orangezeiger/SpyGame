@@ -140,6 +140,51 @@ button:disabled {
     font-size: 18px;
 }
 
+.game-topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.game-code-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #151515;
+    border: 1px solid var(--card-border);
+    font-weight: 700;
+}
+
+.game-code-label {
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+#gameRoomCode {
+    font-size: 14px;
+    letter-spacing: 0.16em;
+    color: #ffd0d0;
+}
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+    font-size: 18px;
+    line-height: 1;
+}
+
 .hint {
     font-size: 12px;
     color: var(--muted);
@@ -268,6 +313,9 @@ pre#log {
     .room-code-box {
         flex-direction: column;
         align-items: flex-start;
+    }
+    .game-topbar {
+        justify-content: space-between;
     }
     #roomCodeLarge {
         font-size: 24px;

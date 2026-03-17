@@ -17,6 +17,7 @@ const lobbyScreen = document.getElementById("lobbyScreen");
 const gameScreen = document.getElementById("gameScreen");
 const roomIdLabel = document.getElementById("roomIdLabel");
 const roomCodeLarge = document.getElementById("roomCodeLarge");
+const gameRoomCode = document.getElementById("gameRoomCode");
 const hostLabel = document.getElementById("hostLabel");
 const lobbyStateText = document.getElementById("lobbyStateText");
 const roleLabel = document.getElementById("roleLabel");
@@ -49,6 +50,7 @@ function clearSession() {
 function updateRoomLabels() {
   roomIdLabel.textContent = state.roomId || "-";
   roomCodeLarge.textContent = state.roomId || "------";
+  gameRoomCode.textContent = state.roomId || "------";
 }
 
 function sanitizeRoomId(value) {
@@ -328,13 +330,6 @@ document.getElementById("copyRoomBtn").addEventListener("click", copyRoomId);
 document.getElementById("copyRoomBtnGame").addEventListener("click", copyRoomId);
 document.getElementById("refreshLobbyBtn").addEventListener("click", () => {
   syncRoomState().catch(handleRoomStateError);
-});
-document.getElementById("restartTimerBtn").addEventListener("click", () => {
-  if (!state.startedAtEpochMillis) {
-    return;
-  }
-  startTimer();
-  log("Timer lokal neu synchronisiert.");
 });
 roomIdInput.addEventListener("input", () => {
   roomIdInput.value = sanitizeRoomId(roomIdInput.value);

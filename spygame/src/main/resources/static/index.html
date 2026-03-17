@@ -75,6 +75,13 @@
 
     <section id="gameScreen" class="hidden">
         <section class="card">
+            <div class="game-topbar">
+                <button id="copyRoomBtnGame" class="game-code-button" title="Lobbycode kopieren">
+                    <span class="game-code-label">Lobby</span>
+                    <span id="gameRoomCode">------</span>
+                </button>
+                <button id="leaveRoomBtnGame" class="icon-button" title="Raum verlassen" aria-label="Raum verlassen">x</button>
+            </div>
             <h2>Spiel läuft</h2>
             <div class="timer">
                 <span>Timer:</span>
@@ -82,11 +89,6 @@
             </div>
             <p id="roleLabel" class="role-text">Noch keine Rolle.</p>
             <p id="wordLabel" class="word-text"></p>
-            <div class="row">
-                <button id="copyRoomBtnGame" class="secondary-button">Lobby kopieren</button>
-                <button id="leaveRoomBtnGame">Raum verlassen</button>
-                <button id="restartTimerBtn" class="secondary-button">Timer neu</button>
-            </div>
         </section>
     </section>
 </main>
