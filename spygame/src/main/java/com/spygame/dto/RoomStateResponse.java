@@ -9,6 +9,10 @@ public class RoomStateResponse {
     private final String hostPlayerId;
     private final long startedAtEpochMillis;
     private final int gameDurationSeconds;
+    private final int gameDurationMinutes;
+    private final int imposterCount;
+    private final int maxImposterCount;
+    private final int minPlayersToStart;
     private final List<PlayerSummary> players;
 
     public RoomStateResponse(
@@ -18,6 +22,10 @@ public class RoomStateResponse {
             String hostPlayerId,
             long startedAtEpochMillis,
             int gameDurationSeconds,
+            int gameDurationMinutes,
+            int imposterCount,
+            int maxImposterCount,
+            int minPlayersToStart,
             List<PlayerSummary> players
     ) {
         this.roomId = roomId;
@@ -26,6 +34,10 @@ public class RoomStateResponse {
         this.hostPlayerId = hostPlayerId;
         this.startedAtEpochMillis = startedAtEpochMillis;
         this.gameDurationSeconds = gameDurationSeconds;
+        this.gameDurationMinutes = gameDurationMinutes;
+        this.imposterCount = imposterCount;
+        this.maxImposterCount = maxImposterCount;
+        this.minPlayersToStart = minPlayersToStart;
         this.players = players;
     }
 
@@ -51,6 +63,22 @@ public class RoomStateResponse {
 
     public int getGameDurationSeconds() {
         return gameDurationSeconds;
+    }
+
+    public int getGameDurationMinutes() {
+        return gameDurationMinutes;
+    }
+
+    public int getImposterCount() {
+        return imposterCount;
+    }
+
+    public int getMaxImposterCount() {
+        return maxImposterCount;
+    }
+
+    public int getMinPlayersToStart() {
+        return minPlayersToStart;
     }
 
     public List<PlayerSummary> getPlayers() {

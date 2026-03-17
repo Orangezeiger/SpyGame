@@ -17,7 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class RoomService {
-    private static final int GAME_DURATION_SECONDS = 8 * 60;
+    private static final int MIN_PLAYERS_TO_START = 3;
+    private static final int MIN_GAME_DURATION_MINUTES = 3;
+    private static final int MAX_GAME_DURATION_MINUTES = 15;
 
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();
     private final Map<String, String> playerToRoom = new ConcurrentHashMap<>();
@@ -67,14 +69,19 @@ public class RoomService {
                 throw new IllegalArgumentException("Only the host can start the game");
             }
             if (!room.isStarted()) {
-                if (room.getPlayers().size() < 2) {
-                    throw new IllegalArgumentException("Need at least 2 players");
+                int playerCount = room.getPlayers().size();
+                if (playerCount < MIN_PLAYERS_TO_START) {
+                    throw new IllegalArgumentException("Need at least 3 players");
                 }
+                validateImposterCount(playerCount, room.getImposterCount());
                 String word = words.get(random.nextInt(words.size()));
-                int spyIndex = random.nextInt(room.getPlayers().size());
-                String spyPlayerId = room.getPlayers().get(spyIndex).getId();
+                room.getSpyPlayerIds().clear();
+                List<Player> shuffledPlayers = new java.util.ArrayList<>(room.getPlayers());
+                java.util.Collections.shuffle(shuffledPlayers, random);
+                for (int index = 0; index < room.getImposterCount(); index++) {
+                    room.getSpyPlayerIds().add(shuffledPlayers.get(index).getId());
+                }
                 room.setWord(word);
-                room.setSpyPlayerId(spyPlayerId);
                 room.setStartedAtEpochMillis(System.currentTimeMillis());
                 room.setStarted(true);
             }
@@ -94,7 +101,7 @@ public class RoomService {
         if (!room.isStarted()) {
             throw new IllegalArgumentException("Game not started");
         }
-        if (playerId.equals(room.getSpyPlayerId())) {
+        if (room.getSpyPlayerIds().contains(playerId)) {
             return new RoleResponse("SPY", null);
         }
         return new RoleResponse("PLAYER", room.getWord());
@@ -118,9 +125,41 @@ public class RoomService {
                 playerId != null && playerId.equals(room.getHostPlayerId()),
                 room.getHostPlayerId(),
                 room.getStartedAtEpochMillis(),
-                GAME_DURATION_SECONDS,
+                room.getGameDurationMinutes() * 60,
+                room.getGameDurationMinutes(),
+                room.getImposterCount(),
+                maxImposterCount(room.getPlayers().size()),
+                MIN_PLAYERS_TO_START,
                 players
         );
+    }
+
+    public RoomStateResponse updateRoomSettings(String roomId, String playerId, Integer gameDurationMinutes, Integer imposterCount) {
+        Room room = rooms.get(roomId);
+        if (room == null) {
+            throw new IllegalArgumentException("Room not found");
+        }
+
+        synchronized (room) {
+            if (!playerId.equals(room.getHostPlayerId())) {
+                throw new IllegalArgumentException("Only the host can change settings");
+            }
+            if (room.isStarted()) {
+                throw new IllegalArgumentException("Game already started");
+            }
+            if (gameDurationMinutes != null) {
+                if (gameDurationMinutes < MIN_GAME_DURATION_MINUTES || gameDurationMinutes > MAX_GAME_DURATION_MINUTES) {
+                    throw new IllegalArgumentException("Minutes must be between 3 and 15");
+                }
+                room.setGameDurationMinutes(gameDurationMinutes);
+            }
+            if (imposterCount != null) {
+                validateImposterCount(room.getPlayers().size(), imposterCount);
+                room.setImposterCount(imposterCount);
+            }
+        }
+
+        return getRoomState(roomId, playerId);
     }
 
     public void leaveRoom(String playerId) {
@@ -135,6 +174,7 @@ public class RoomService {
 
         synchronized (room) {
             room.getPlayers().removeIf(player -> player.getId().equals(playerId));
+            room.getSpyPlayerIds().removeIf(spyId -> spyId.equals(playerId));
 
             if (room.getPlayers().isEmpty()) {
                 rooms.remove(roomId);
@@ -170,5 +210,25 @@ public class RoomService {
 
     private String shortId() {
         return String.format("%08d", random.nextInt(100_000_000));
+    }
+
+    private int maxImposterCount(int playerCount) {
+        if (playerCount >= 7) {
+            return 3;
+        }
+        if (playerCount >= 5) {
+            return 2;
+        }
+        return 1;
+    }
+
+    private void validateImposterCount(int playerCount, int imposterCount) {
+        if (imposterCount < 1 || imposterCount > 3) {
+            throw new IllegalArgumentException("Imposters must be between 1 and 3");
+        }
+        int maxImposters = maxImposterCount(playerCount);
+        if (imposterCount > maxImposters) {
+            throw new IllegalArgumentException("Too many imposters for current player count");
+        }
     }
 }

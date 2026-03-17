@@ -6,11 +6,13 @@ import java.util.List;
 public class Room {
     private final String id;
     private final List<Player> players = new ArrayList<>();
+    private final List<String> spyPlayerIds = new ArrayList<>();
     private boolean started;
     private String word;
-    private String spyPlayerId;
     private String hostPlayerId;
     private long startedAtEpochMillis;
+    private int gameDurationMinutes = 8;
+    private int imposterCount = 1;
 
     public Room(String id) {
         this.id = id;
@@ -40,12 +42,8 @@ public class Room {
         this.word = word;
     }
 
-    public String getSpyPlayerId() {
-        return spyPlayerId;
-    }
-
-    public void setSpyPlayerId(String spyPlayerId) {
-        this.spyPlayerId = spyPlayerId;
+    public List<String> getSpyPlayerIds() {
+        return spyPlayerIds;
     }
 
     public String getHostPlayerId() {
@@ -62,5 +60,21 @@ public class Room {
 
     public void setStartedAtEpochMillis(long startedAtEpochMillis) {
         this.startedAtEpochMillis = startedAtEpochMillis;
+    }
+
+    public int getGameDurationMinutes() {
+        return gameDurationMinutes;
+    }
+
+    public void setGameDurationMinutes(int gameDurationMinutes) {
+        this.gameDurationMinutes = gameDurationMinutes;
+    }
+
+    public int getImposterCount() {
+        return imposterCount;
+    }
+
+    public void setImposterCount(int imposterCount) {
+        this.imposterCount = imposterCount;
     }
 }
