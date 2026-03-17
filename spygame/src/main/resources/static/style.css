@@ -13,6 +13,7 @@ body {
     max-width: 760px;
     margin: 32px auto;
     padding: 0 16px 40px;
+    animation: fadeUp 0.6s ease;
 }
 
 h1 {
@@ -29,6 +30,7 @@ h1 {
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+    animation: popIn 0.5s ease;
 }
 
 label {
@@ -71,6 +73,23 @@ button:hover {
     transform: translateY(-1px);
 }
 
+.timer {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    margin-bottom: 12px;
+}
+
+.timer strong {
+    color: #ff4a4a;
+    letter-spacing: 1px;
+    font-size: 18px;
+}
+
 .hint {
     font-size: 12px;
     color: #c2c2c2;
@@ -106,10 +125,44 @@ pre#log {
     border-radius: 8px;
     background: #1a1a1a;
     border: 1px solid #3a3a3a;
+    animation: slideIn 0.3s ease;
 }
 
 .hidden {
     display: none;
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @media (max-width: 600px) {

@@ -1,6 +1,10 @@
 const state = {
   roomId: localStorage.getItem("roomId") || "",
   playerId: localStorage.getItem("playerId") || "",
+  screen: "setup",
+  pollHandle: null,
+  timerHandle: null,
+  timerSeconds: 8 * 60,
 };
 
 const roomIdLabel = document.getElementById("roomIdLabel");
@@ -9,8 +13,10 @@ const roleLabel = document.getElementById("roleLabel");
 const wordLabel = document.getElementById("wordLabel");
 const logEl = document.getElementById("log");
 const playersList = document.getElementById("playersList");
+const setupScreen = document.getElementById("setupScreen");
 const lobbyScreen = document.getElementById("lobbyScreen");
 const gameScreen = document.getElementById("gameScreen");
+const timerLabel = document.getElementById("timerLabel");
 
 function updateLabels() {
   roomIdLabel.textContent = state.roomId || "-";
@@ -53,18 +59,81 @@ async function refreshPlayers() {
       playersList.appendChild(li);
     });
   } catch (err) {
-    log(err.message);
+    stopPolling();
+    log(`Lobby-Update gestoppt: ${err.message}`);
   }
 }
 
+function showSetup() {
+  setupScreen.classList.remove("hidden");
+  lobbyScreen.classList.add("hidden");
+  gameScreen.classList.add("hidden");
+  state.screen = "setup";
+}
+
 function showLobby() {
+  setupScreen.classList.add("hidden");
   lobbyScreen.classList.remove("hidden");
   gameScreen.classList.add("hidden");
+  state.screen = "lobby";
+  startPolling();
 }
 
 function showGame() {
+  setupScreen.classList.add("hidden");
   lobbyScreen.classList.add("hidden");
   gameScreen.classList.remove("hidden");
+  state.screen = "game";
+  stopPolling();
+}
+
+function startPolling() {
+  if (state.pollHandle || !state.roomId) return;
+  refreshPlayers();
+  state.pollHandle = setInterval(refreshPlayers, 3000);
+}
+
+function stopPolling() {
+  if (state.pollHandle) {
+    clearInterval(state.pollHandle);
+    state.pollHandle = null;
+  }
+}
+
+function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function updateTimerLabel() {
+  timerLabel.textContent = formatTime(state.timerSeconds);
+}
+
+function startTimer() {
+  stopTimer();
+  updateTimerLabel();
+  state.timerHandle = setInterval(() => {
+    if (state.timerSeconds <= 0) {
+      stopTimer();
+      log("Timer abgelaufen.");
+      return;
+    }
+    state.timerSeconds -= 1;
+    updateTimerLabel();
+  }, 1000);
+}
+
+function stopTimer() {
+  if (state.timerHandle) {
+    clearInterval(state.timerHandle);
+    state.timerHandle = null;
+  }
+}
+
+function resetTimer() {
+  state.timerSeconds = 8 * 60;
+  startTimer();
 }
 
 document.getElementById("createRoomBtn").addEventListener("click", async () => {
@@ -76,7 +145,7 @@ document.getElementById("createRoomBtn").addEventListener("click", async () => {
     localStorage.setItem("roomId", state.roomId);
     localStorage.setItem("playerId", state.playerId);
     updateLabels();
-    await refreshPlayers();
+    showLobby();
     log(`Raum erstellt: ${state.roomId}`);
   } catch (err) {
     log(err.message);
@@ -93,7 +162,7 @@ document.getElementById("joinRoomBtn").addEventListener("click", async () => {
     localStorage.setItem("roomId", state.roomId);
     localStorage.setItem("playerId", state.playerId);
     updateLabels();
-    await refreshPlayers();
+    showLobby();
     log(`Raum beigetreten: ${roomId}`);
   } catch (err) {
     log(err.message);
@@ -108,6 +177,7 @@ document.getElementById("startGameBtn").addEventListener("click", async () => {
     }
     await postJson("/start-game", { roomId: state.roomId });
     showGame();
+    resetTimer();
     log("Spiel gestartet.");
   } catch (err) {
     log(err.message);
@@ -128,6 +198,7 @@ document.getElementById("showRoleBtn").addEventListener("click", async () => {
     roleLabel.textContent = data.role === "SPY" ? "SPY" : "SPIELER";
     wordLabel.textContent = data.role === "SPY" ? "Kein Wort. Du bist der Spy." : `Wort: ${data.word}`;
     showGame();
+    resetTimer();
     log("Rolle geladen.");
   } catch (err) {
     log(err.message);
@@ -136,8 +207,30 @@ document.getElementById("showRoleBtn").addEventListener("click", async () => {
 
 document.getElementById("backToLobbyBtn").addEventListener("click", () => {
   showLobby();
+  stopTimer();
+});
+
+document.getElementById("restartTimerBtn").addEventListener("click", () => {
+  resetTimer();
+  log("Timer neu gestartet.");
+});
+
+document.getElementById("leaveRoomBtn").addEventListener("click", () => {
+  state.roomId = "";
+  state.playerId = "";
+  localStorage.removeItem("roomId");
+  localStorage.removeItem("playerId");
+  updateLabels();
+  stopPolling();
+  stopTimer();
+  showSetup();
+  log("Raum verlassen.");
 });
 
 updateLabels();
-refreshPlayers();
-setInterval(refreshPlayers, 3000);
+if (state.roomId && state.playerId) {
+  showLobby();
+} else {
+  showSetup();
+}
+updateTimerLabel();

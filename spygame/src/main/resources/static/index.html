@@ -10,8 +10,9 @@
 <main class="container">
     <h1>SpyGame</h1>
 
-    <section id="lobbyScreen">
+    <section id="setupScreen">
         <section class="card">
+            <h2>Raum erstellen oder beitreten</h2>
             <label>
                 Dein Name
                 <input id="playerName" type="text" placeholder="z.B. Max" />
@@ -23,20 +24,24 @@
             </div>
             <p class="hint">Tipp: Raum-ID teilen, damit andere beitreten.</p>
         </section>
+    </section>
 
+    <section id="lobbyScreen" class="hidden">
         <section class="card">
-            <div class="row">
-                <button id="startGameBtn">Spiel starten</button>
-                <button id="showRoleBtn">Rolle anzeigen</button>
-            </div>
+            <h2>Warteraum</h2>
             <div class="status">
                 <p><strong>Raum:</strong> <span id="roomIdLabel">-</span></p>
                 <p><strong>Player-ID:</strong> <span id="playerIdLabel">-</span></p>
             </div>
+            <div class="row">
+                <button id="startGameBtn">Spiel starten</button>
+                <button id="showRoleBtn">Rolle anzeigen</button>
+                <button id="leaveRoomBtn">Raum verlassen</button>
+            </div>
         </section>
 
         <section class="card">
-            <h2>Lobby</h2>
+            <h2>Spieler in der Lobby</h2>
             <p class="hint">Aktive Spieler in diesem Raum:</p>
             <ul id="playersList" class="players"></ul>
         </section>
@@ -50,9 +55,16 @@
     <section id="gameScreen" class="hidden">
         <section class="card">
             <h2>Deine Rolle</h2>
+            <div class="timer">
+                <span>Timer:</span>
+                <strong id="timerLabel">08:00</strong>
+            </div>
             <p id="roleLabel">Noch keine Rolle.</p>
             <p id="wordLabel"></p>
-            <button id="backToLobbyBtn">Zurück zur Lobby</button>
+            <div class="row">
+                <button id="backToLobbyBtn">Zurück zur Lobby</button>
+                <button id="restartTimerBtn">Timer neu</button>
+            </div>
         </section>
     </section>
 </main>

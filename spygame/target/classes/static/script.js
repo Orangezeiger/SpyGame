@@ -8,6 +8,9 @@ const playerIdLabel = document.getElementById("playerIdLabel");
 const roleLabel = document.getElementById("roleLabel");
 const wordLabel = document.getElementById("wordLabel");
 const logEl = document.getElementById("log");
+const playersList = document.getElementById("playersList");
+const lobbyScreen = document.getElementById("lobbyScreen");
+const gameScreen = document.getElementById("gameScreen");
 
 function updateLabels() {
   roomIdLabel.textContent = state.roomId || "-";
@@ -32,6 +35,38 @@ async function postJson(url, body) {
   return data;
 }
 
+async function refreshPlayers() {
+  if (!state.roomId) {
+    playersList.innerHTML = "";
+    return;
+  }
+  try {
+    const res = await fetch(`/room-players?roomId=${encodeURIComponent(state.roomId)}`);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Unbekannter Fehler");
+    }
+    playersList.innerHTML = "";
+    data.players.forEach((player) => {
+      const li = document.createElement("li");
+      li.textContent = player.name;
+      playersList.appendChild(li);
+    });
+  } catch (err) {
+    log(err.message);
+  }
+}
+
+function showLobby() {
+  lobbyScreen.classList.remove("hidden");
+  gameScreen.classList.add("hidden");
+}
+
+function showGame() {
+  lobbyScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+}
+
 document.getElementById("createRoomBtn").addEventListener("click", async () => {
   try {
     const playerName = document.getElementById("playerName").value.trim();
@@ -41,6 +76,7 @@ document.getElementById("createRoomBtn").addEventListener("click", async () => {
     localStorage.setItem("roomId", state.roomId);
     localStorage.setItem("playerId", state.playerId);
     updateLabels();
+    await refreshPlayers();
     log(`Raum erstellt: ${state.roomId}`);
   } catch (err) {
     log(err.message);
@@ -57,6 +93,7 @@ document.getElementById("joinRoomBtn").addEventListener("click", async () => {
     localStorage.setItem("roomId", state.roomId);
     localStorage.setItem("playerId", state.playerId);
     updateLabels();
+    await refreshPlayers();
     log(`Raum beigetreten: ${roomId}`);
   } catch (err) {
     log(err.message);
@@ -70,6 +107,7 @@ document.getElementById("startGameBtn").addEventListener("click", async () => {
       return;
     }
     await postJson("/start-game", { roomId: state.roomId });
+    showGame();
     log("Spiel gestartet.");
   } catch (err) {
     log(err.message);
@@ -89,10 +127,17 @@ document.getElementById("showRoleBtn").addEventListener("click", async () => {
     }
     roleLabel.textContent = data.role === "SPY" ? "SPY" : "SPIELER";
     wordLabel.textContent = data.role === "SPY" ? "Kein Wort. Du bist der Spy." : `Wort: ${data.word}`;
+    showGame();
     log("Rolle geladen.");
   } catch (err) {
     log(err.message);
   }
 });
 
+document.getElementById("backToLobbyBtn").addEventListener("click", () => {
+  showLobby();
+});
+
 updateLabels();
+refreshPlayers();
+setInterval(refreshPlayers, 3000);
