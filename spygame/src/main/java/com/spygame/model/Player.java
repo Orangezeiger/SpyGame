@@ -1,8 +1,11 @@
 package com.spygame.model;
 
 public class Player {
-    private final String id;
-    private final String name;
+    private String id;
+    private String name;
+
+    public Player() {
+    }
 
     public Player(String id, String name) {
         this.id = id;
@@ -13,7 +16,15 @@ public class Player {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

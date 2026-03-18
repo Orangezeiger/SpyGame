@@ -5,6 +5,7 @@ import com.spygame.dto.JoinRoomResponse;
 import com.spygame.dto.RoleResponse;
 import com.spygame.dto.RoomStateResponse;
 import com.spygame.dto.StartGameResponse;
+import com.spygame.model.GameState;
 import com.spygame.model.Player;
 import com.spygame.model.Room;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,6 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class RoomService {
@@ -21,8 +21,7 @@ public class RoomService {
     private static final int MIN_GAME_DURATION_MINUTES = 3;
     private static final int MAX_GAME_DURATION_MINUTES = 15;
 
-    private final Map<String, Room> rooms = new ConcurrentHashMap<>();
-    private final Map<String, String> playerToRoom = new ConcurrentHashMap<>();
+    private final GameStateStore gameStateStore;
     private final SecureRandom random = new SecureRandom();
 
     private final List<String> words = Arrays.asList(
@@ -38,33 +37,35 @@ public class RoomService {
             "Restaurant"
     );
 
+    public RoomService(GameStateStore gameStateStore) {
+        this.gameStateStore = gameStateStore;
+    }
+
     public CreateRoomResponse createRoom(String playerName) {
-        String roomId = numericRoomId();
-        Room room = new Room(roomId);
-        rooms.put(roomId, room);
-        String playerId = addPlayer(room, playerName);
-        room.setHostPlayerId(playerId);
-        return new CreateRoomResponse(roomId, playerId);
+        return gameStateStore.write(state -> {
+            String roomId = numericRoomId(state);
+            Room room = new Room(roomId);
+            state.getRooms().put(roomId, room);
+            String playerId = addPlayer(state, room, playerName);
+            room.setHostPlayerId(playerId);
+            return new CreateRoomResponse(roomId, playerId);
+        });
     }
 
     public JoinRoomResponse joinRoom(String roomId, String playerName) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("Room not found");
-        }
-        if (room.isStarted()) {
-            throw new IllegalArgumentException("Game already started");
-        }
-        String playerId = addPlayer(room, playerName);
-        return new JoinRoomResponse(roomId, playerId);
+        return gameStateStore.write(state -> {
+            Room room = requireRoom(state, roomId);
+            if (room.isStarted()) {
+                throw new IllegalArgumentException("Game already started");
+            }
+            String playerId = addPlayer(state, room, playerName);
+            return new JoinRoomResponse(roomId, playerId);
+        });
     }
 
     public StartGameResponse startGame(String roomId, String playerId) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("Room not found");
-        }
-        synchronized (room) {
+        return gameStateStore.write(state -> {
+            Room room = requireRoom(state, roomId);
             if (!playerId.equals(room.getHostPlayerId())) {
                 throw new IllegalArgumentException("Only the host can start the game");
             }
@@ -85,64 +86,30 @@ public class RoomService {
                 room.setStartedAtEpochMillis(System.currentTimeMillis());
                 room.setStarted(true);
             }
-        }
-        return new StartGameResponse(roomId, room.getPlayers().size());
+            return new StartGameResponse(roomId, room.getPlayers().size());
+        });
     }
 
     public RoleResponse getRole(String playerId) {
-        String roomId = playerToRoom.get(playerId);
-        if (roomId == null) {
-            throw new IllegalArgumentException("Player not found");
-        }
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("Room not found");
-        }
-        if (!room.isStarted()) {
-            throw new IllegalArgumentException("Game not started");
-        }
-        if (room.getSpyPlayerIds().contains(playerId)) {
-            return new RoleResponse("SPY", null);
-        }
-        return new RoleResponse("PLAYER", room.getWord());
+        return gameStateStore.read(state -> {
+            Room room = findRoomByPlayerId(state, playerId);
+            if (!room.isStarted()) {
+                throw new IllegalArgumentException("Game not started");
+            }
+            if (room.getSpyPlayerIds().contains(playerId)) {
+                return new RoleResponse("SPY", null);
+            }
+            return new RoleResponse("PLAYER", room.getWord());
+        });
     }
 
     public RoomStateResponse getRoomState(String roomId, String playerId) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("Room not found");
-        }
-        List<RoomStateResponse.PlayerSummary> players = room.getPlayers().stream()
-                .map(player -> new RoomStateResponse.PlayerSummary(
-                        player.getId(),
-                        player.getName(),
-                        player.getId().equals(room.getHostPlayerId())
-                ))
-                .toList();
-        int maxImposters = maxImposterCount(room.getPlayers().size());
-        int effectiveImposterCount = Math.min(room.getImposterCount(), maxImposters);
-        return new RoomStateResponse(
-                roomId,
-                room.isStarted(),
-                playerId != null && playerId.equals(room.getHostPlayerId()),
-                room.getHostPlayerId(),
-                room.getStartedAtEpochMillis(),
-                room.getGameDurationMinutes() * 60,
-                room.getGameDurationMinutes(),
-                effectiveImposterCount,
-                maxImposters,
-                MIN_PLAYERS_TO_START,
-                players
-        );
+        return gameStateStore.read(state -> toRoomStateResponse(requireRoom(state, roomId), playerId));
     }
 
     public RoomStateResponse updateRoomSettings(String roomId, String playerId, Integer gameDurationMinutes, Integer imposterCount) {
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            throw new IllegalArgumentException("Room not found");
-        }
-
-        synchronized (room) {
+        return gameStateStore.write(state -> {
+            Room room = requireRoom(state, roomId);
             if (!playerId.equals(room.getHostPlayerId())) {
                 throw new IllegalArgumentException("Only the host can change settings");
             }
@@ -159,28 +126,26 @@ public class RoomService {
                 validateImposterCount(room.getPlayers().size(), imposterCount);
                 room.setImposterCount(imposterCount);
             }
-        }
-
-        return getRoomState(roomId, playerId);
+            return toRoomStateResponse(room, playerId);
+        });
     }
 
     public void leaveRoom(String playerId) {
-        String roomId = playerToRoom.remove(playerId);
-        if (roomId == null) {
-            return;
-        }
-        Room room = rooms.get(roomId);
-        if (room == null) {
-            return;
-        }
-
-        synchronized (room) {
+        gameStateStore.write(state -> {
+            String roomId = state.getPlayerToRoom().remove(playerId);
+            if (roomId == null) {
+                return null;
+            }
+            Room room = state.getRooms().get(roomId);
+            if (room == null) {
+                return null;
+            }
             room.getPlayers().removeIf(player -> player.getId().equals(playerId));
             room.getSpyPlayerIds().removeIf(spyId -> spyId.equals(playerId));
 
             if (room.getPlayers().isEmpty()) {
-                rooms.remove(roomId);
-                return;
+                state.getRooms().remove(roomId);
+                return null;
             }
 
             if (playerId.equals(room.getHostPlayerId())) {
@@ -188,27 +153,26 @@ public class RoomService {
             }
 
             room.setImposterCount(Math.min(room.getImposterCount(), maxImposterCount(room.getPlayers().size())));
-        }
+            return null;
+        });
     }
 
-    private String addPlayer(Room room, String playerName) {
+    private String addPlayer(GameState state, Room room, String playerName) {
         if (playerName == null || playerName.trim().isEmpty()) {
             throw new IllegalArgumentException("Player name required");
         }
         String playerId = shortId();
         Player player = new Player(playerId, playerName.trim());
-        synchronized (room) {
-            room.getPlayers().add(player);
-        }
-        playerToRoom.put(playerId, room.getId());
+        room.getPlayers().add(player);
+        state.getPlayerToRoom().put(playerId, room.getId());
         return playerId;
     }
 
-    private String numericRoomId() {
+    private String numericRoomId(GameState state) {
         String roomId;
         do {
             roomId = String.format("%06d", random.nextInt(1_000_000));
-        } while (rooms.containsKey(roomId));
+        } while (state.getRooms().containsKey(roomId));
         return roomId;
     }
 
@@ -234,5 +198,46 @@ public class RoomService {
         if (imposterCount > maxImposters) {
             throw new IllegalArgumentException("Too many imposters for current player count");
         }
+    }
+
+    private Room requireRoom(GameState state, String roomId) {
+        Room room = state.getRooms().get(roomId);
+        if (room == null) {
+            throw new IllegalArgumentException("Room not found");
+        }
+        return room;
+    }
+
+    private Room findRoomByPlayerId(GameState state, String playerId) {
+        String roomId = state.getPlayerToRoom().get(playerId);
+        if (roomId == null) {
+            throw new IllegalArgumentException("Player not found");
+        }
+        return requireRoom(state, roomId);
+    }
+
+    private RoomStateResponse toRoomStateResponse(Room room, String playerId) {
+        List<RoomStateResponse.PlayerSummary> players = room.getPlayers().stream()
+                .map(player -> new RoomStateResponse.PlayerSummary(
+                        player.getId(),
+                        player.getName(),
+                        player.getId().equals(room.getHostPlayerId())
+                ))
+                .toList();
+        int maxImposters = maxImposterCount(room.getPlayers().size());
+        int effectiveImposterCount = Math.min(room.getImposterCount(), maxImposters);
+        return new RoomStateResponse(
+                room.getId(),
+                room.isStarted(),
+                playerId != null && playerId.equals(room.getHostPlayerId()),
+                room.getHostPlayerId(),
+                room.getStartedAtEpochMillis(),
+                room.getGameDurationMinutes() * 60,
+                room.getGameDurationMinutes(),
+                effectiveImposterCount,
+                maxImposters,
+                MIN_PLAYERS_TO_START,
+                players
+        );
     }
 }

@@ -4,15 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Room {
-    private final String id;
-    private final List<Player> players = new ArrayList<>();
-    private final List<String> spyPlayerIds = new ArrayList<>();
+    private String id;
+    private List<Player> players = new ArrayList<>();
+    private List<String> spyPlayerIds = new ArrayList<>();
     private boolean started;
     private String word;
     private String hostPlayerId;
     private long startedAtEpochMillis;
     private int gameDurationMinutes = 8;
     private int imposterCount = 1;
+
+    public Room() {
+    }
 
     public Room(String id) {
         this.id = id;
@@ -22,8 +25,16 @@ public class Room {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public List<Player> getPlayers() {
         return players;
+    }
+
+    public void setPlayers(List<Player> players) {
+        this.players = players;
     }
 
     public boolean isStarted() {
@@ -44,6 +55,10 @@ public class Room {
 
     public List<String> getSpyPlayerIds() {
         return spyPlayerIds;
+    }
+
+    public void setSpyPlayerIds(List<String> spyPlayerIds) {
+        this.spyPlayerIds = spyPlayerIds;
     }
 
     public String getHostPlayerId() {
