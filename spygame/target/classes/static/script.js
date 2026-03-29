@@ -22,6 +22,7 @@ const gameScreen = document.getElementById("gameScreen");
 const accountMenuBtn = document.getElementById("accountMenuBtn");
 const accountDropdown = document.getElementById("accountDropdown");
 const accountInitial = document.getElementById("accountInitial");
+const accountGuestIcon = document.getElementById("accountGuestIcon");
 const roomIdLabel = document.getElementById("roomIdLabel");
 const roomCodeLarge = document.getElementById("roomCodeLarge");
 const gameRoomCode = document.getElementById("gameRoomCode");
@@ -54,6 +55,10 @@ const logoutBtn = document.getElementById("logoutBtn");
 const createCategoryBtn = document.getElementById("createCategoryBtn");
 const loginModal = document.getElementById("loginModal");
 const registerModal = document.getElementById("registerModal");
+const loginError = document.getElementById("loginError");
+const registerError = document.getElementById("registerError");
+const openLoginModalBtn = document.getElementById("openLoginModalBtn");
+const openRegisterModalBtn = document.getElementById("openRegisterModalBtn");
 
 function log(message) {
   const ts = new Date().toLocaleTimeString();
@@ -89,11 +94,15 @@ function updateAuthUi() {
   authStatus.textContent = loggedIn
     ? `Angemeldet als ${state.username} (${state.userEmail})`
     : "Noch nicht angemeldet.";
-  accountInitial.textContent = loggedIn ? state.username.charAt(0).toUpperCase() : "A";
+  accountInitial.textContent = loggedIn ? state.username.charAt(0).toUpperCase() : "";
+  accountInitial.classList.toggle("hidden", !loggedIn);
+  accountGuestIcon.classList.toggle("hidden", loggedIn);
   customCategoryHint.textContent = loggedIn
     ? "Deine Kategorie wird zu deinen Standardkategorien hinzugefuegt und ist direkt im Warteraum auswählbar."
     : "Melde dich an, um eigene Kategorien mit eigenen Wörtern zu speichern.";
   logoutBtn.classList.toggle("hidden", !loggedIn);
+  openLoginModalBtn.classList.toggle("hidden", loggedIn);
+  openRegisterModalBtn.classList.toggle("hidden", loggedIn);
   createCategoryBtn.disabled = !loggedIn;
   if (loggedIn && !createPlayerNameInput.value.trim()) {
     createPlayerNameInput.value = state.username;
@@ -104,6 +113,7 @@ function updateAuthUi() {
 }
 
 function openModal(modal) {
+  clearAuthErrors();
   modal.classList.remove("hidden");
 }
 
@@ -114,6 +124,19 @@ function closeModal(modal) {
 function closeAllModals() {
   closeModal(loginModal);
   closeModal(registerModal);
+  clearAuthErrors();
+}
+
+function setAuthError(target, message) {
+  target.textContent = message;
+  target.classList.remove("hidden");
+}
+
+function clearAuthErrors() {
+  loginError.textContent = "";
+  registerError.textContent = "";
+  loginError.classList.add("hidden");
+  registerError.classList.add("hidden");
 }
 
 function toggleAccountDropdown(forceOpen) {
@@ -439,23 +462,27 @@ async function handleAuthResponse(promise, successMessage) {
 
 document.getElementById("registerBtn").addEventListener("click", async () => {
   try {
+    clearAuthErrors();
     await handleAuthResponse(postJson("/auth/register", {
       username: registerUsernameInput.value.trim(),
       email: registerEmailInput.value.trim(),
       password: registerPasswordInput.value,
     }), "Account fuer {username} erstellt.");
   } catch (error) {
+    setAuthError(registerError, error.message);
     log(error.message);
   }
 });
 
 document.getElementById("loginBtn").addEventListener("click", async () => {
   try {
+    clearAuthErrors();
     await handleAuthResponse(postJson("/auth/login", {
       email: loginEmailInput.value.trim(),
       password: loginPasswordInput.value,
     }), "{username} ist jetzt angemeldet.");
   } catch (error) {
+    setAuthError(loginError, error.message);
     log(error.message);
   }
 });
@@ -599,13 +626,13 @@ accountMenuBtn.addEventListener("click", () => {
   toggleAccountDropdown();
 });
 
-document.getElementById("openLoginModalBtn").addEventListener("click", () => {
+openLoginModalBtn.addEventListener("click", () => {
   closeModal(registerModal);
   openModal(loginModal);
   toggleAccountDropdown(false);
 });
 
-document.getElementById("openRegisterModalBtn").addEventListener("click", () => {
+openRegisterModalBtn.addEventListener("click", () => {
   closeModal(loginModal);
   openModal(registerModal);
   toggleAccountDropdown(false);
