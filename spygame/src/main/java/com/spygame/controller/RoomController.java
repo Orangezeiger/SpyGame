@@ -10,13 +10,10 @@ import com.spygame.dto.StartGameRequest;
 import com.spygame.dto.StartGameResponse;
 import com.spygame.dto.UpdateRoomSettingsRequest;
 import com.spygame.service.RoomService;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -68,11 +65,5 @@ public class RoomController {
     public Map<String, String> leaveRoom(@RequestParam String playerId) {
         roomService.leaveRoom(playerId);
         return Map.of("status", "ok");
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
-        return Map.of("error", ex.getMessage());
     }
 }
