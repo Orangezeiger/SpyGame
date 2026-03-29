@@ -8,6 +8,20 @@
 </head>
 <body>
 <main class="container">
+    <div class="topbar">
+        <div class="account-menu">
+            <button id="accountMenuBtn" class="account-icon-button" aria-label="Account">
+                <span id="accountInitial">A</span>
+            </button>
+            <div id="accountDropdown" class="account-dropdown hidden">
+                <p id="authStatus" class="hint">Noch nicht angemeldet.</p>
+                <button id="openLoginModalBtn" class="secondary-button">Anmelden</button>
+                <button id="openRegisterModalBtn" class="secondary-button">Registrieren</button>
+                <button id="logoutBtn" class="secondary-button hidden">Abmelden</button>
+            </div>
+        </div>
+    </div>
+
     <header class="hero">
         <p class="eyebrow">Multiplayer Party Game</p>
         <h1>SpyGame</h1>
@@ -15,47 +29,6 @@
     </header>
 
     <section id="setupScreen">
-        <section class="card">
-            <div class="account-header">
-                <div>
-                    <h2>Account</h2>
-                    <p id="authStatus" class="hint">Noch nicht angemeldet.</p>
-                </div>
-                <button id="logoutBtn" class="secondary-button hidden">Abmelden</button>
-            </div>
-            <div class="split-layout auth-layout">
-                <div class="auth-box">
-                    <h3>Registrieren</h3>
-                    <label>
-                        Benutzername
-                        <input id="registerUsername" type="text" placeholder="z.B. SpyMaster" />
-                    </label>
-                    <label>
-                        E-Mail
-                        <input id="registerEmail" type="email" placeholder="name@email.de" />
-                    </label>
-                    <label>
-                        Passwort
-                        <input id="registerPassword" type="password" placeholder="Mindestens 6 Zeichen" />
-                    </label>
-                    <button id="registerBtn">Registrieren</button>
-                </div>
-                <div class="auth-box">
-                    <h3>Anmelden</h3>
-                    <label>
-                        E-Mail
-                        <input id="loginEmail" type="email" placeholder="name@email.de" />
-                    </label>
-                    <label>
-                        Passwort
-                        <input id="loginPassword" type="password" placeholder="Passwort" />
-                    </label>
-                    <button id="loginBtn">Anmelden</button>
-                    <p class="hint">Mit Account kannst du eigene Kategorien und Wörter anlegen.</p>
-                </div>
-            </div>
-        </section>
-
         <div class="split-layout">
             <section class="card">
                 <h2>Raum erstellen</h2>
@@ -183,6 +156,44 @@
         </section>
     </section>
 </main>
+
+<div id="loginModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal="loginModal"></div>
+    <div class="modal-card">
+        <button class="modal-close" data-close-modal="loginModal">x</button>
+        <h3>Anmelden</h3>
+        <label>
+            E-Mail
+            <input id="loginEmail" type="email" placeholder="name@email.de" />
+        </label>
+        <label>
+            Passwort
+            <input id="loginPassword" type="password" placeholder="Passwort" />
+        </label>
+        <button id="loginBtn">Anmelden</button>
+    </div>
+</div>
+
+<div id="registerModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal="registerModal"></div>
+    <div class="modal-card">
+        <button class="modal-close" data-close-modal="registerModal">x</button>
+        <h3>Registrieren</h3>
+        <label>
+            Benutzername
+            <input id="registerUsername" type="text" placeholder="z.B. SpyMaster" />
+        </label>
+        <label>
+            E-Mail
+            <input id="registerEmail" type="email" placeholder="name@email.de" />
+        </label>
+        <label>
+            Passwort
+            <input id="registerPassword" type="password" placeholder="Mindestens 6 Zeichen" />
+        </label>
+        <button id="registerBtn">Registrieren</button>
+    </div>
+</div>
 
 <script src="script.js"></script>
 </body>

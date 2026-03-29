@@ -19,6 +19,9 @@ const state = {
 const setupScreen = document.getElementById("setupScreen");
 const lobbyScreen = document.getElementById("lobbyScreen");
 const gameScreen = document.getElementById("gameScreen");
+const accountMenuBtn = document.getElementById("accountMenuBtn");
+const accountDropdown = document.getElementById("accountDropdown");
+const accountInitial = document.getElementById("accountInitial");
 const roomIdLabel = document.getElementById("roomIdLabel");
 const roomCodeLarge = document.getElementById("roomCodeLarge");
 const gameRoomCode = document.getElementById("gameRoomCode");
@@ -49,6 +52,8 @@ const createCategoryNameInput = document.getElementById("customCategoryName");
 const createCategoryWordsInput = document.getElementById("customCategoryWords");
 const logoutBtn = document.getElementById("logoutBtn");
 const createCategoryBtn = document.getElementById("createCategoryBtn");
+const loginModal = document.getElementById("loginModal");
+const registerModal = document.getElementById("registerModal");
 
 function log(message) {
   const ts = new Date().toLocaleTimeString();
@@ -84,6 +89,7 @@ function updateAuthUi() {
   authStatus.textContent = loggedIn
     ? `Angemeldet als ${state.username} (${state.userEmail})`
     : "Noch nicht angemeldet.";
+  accountInitial.textContent = loggedIn ? state.username.charAt(0).toUpperCase() : "A";
   customCategoryHint.textContent = loggedIn
     ? "Deine Kategorie wird zu deinen Standardkategorien hinzugefuegt und ist direkt im Warteraum auswählbar."
     : "Melde dich an, um eigene Kategorien mit eigenen Wörtern zu speichern.";
@@ -95,6 +101,26 @@ function updateAuthUi() {
   if (loggedIn && !joinPlayerNameInput.value.trim()) {
     joinPlayerNameInput.value = state.username;
   }
+}
+
+function openModal(modal) {
+  modal.classList.remove("hidden");
+}
+
+function closeModal(modal) {
+  modal.classList.add("hidden");
+}
+
+function closeAllModals() {
+  closeModal(loginModal);
+  closeModal(registerModal);
+}
+
+function toggleAccountDropdown(forceOpen) {
+  const shouldOpen = typeof forceOpen === "boolean"
+    ? forceOpen
+    : accountDropdown.classList.contains("hidden");
+  accountDropdown.classList.toggle("hidden", !shouldOpen);
 }
 
 function sanitizeRoomId(value) {
@@ -406,6 +432,8 @@ async function handleAuthResponse(promise, successMessage) {
   syncPlayerNameInputs();
   persistSession();
   await loadCategories();
+  closeAllModals();
+  toggleAccountDropdown(false);
   log(successMessage.replace("{username}", user.username));
 }
 
@@ -439,6 +467,7 @@ logoutBtn.addEventListener("click", async () => {
   updateAuthUi();
   persistSession();
   await loadCategories();
+  toggleAccountDropdown(false);
   log("Du bist jetzt abgemeldet.");
 });
 
@@ -564,6 +593,35 @@ categorySelect.addEventListener("change", async () => {
 
 roomIdInput.addEventListener("input", () => {
   roomIdInput.value = sanitizeRoomId(roomIdInput.value);
+});
+
+accountMenuBtn.addEventListener("click", () => {
+  toggleAccountDropdown();
+});
+
+document.getElementById("openLoginModalBtn").addEventListener("click", () => {
+  closeModal(registerModal);
+  openModal(loginModal);
+  toggleAccountDropdown(false);
+});
+
+document.getElementById("openRegisterModalBtn").addEventListener("click", () => {
+  closeModal(loginModal);
+  openModal(registerModal);
+  toggleAccountDropdown(false);
+});
+
+document.querySelectorAll("[data-close-modal]").forEach((element) => {
+  element.addEventListener("click", () => {
+    const modal = document.getElementById(element.getAttribute("data-close-modal"));
+    closeModal(modal);
+  });
+});
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".account-menu")) {
+    toggleAccountDropdown(false);
+  }
 });
 
 updateRoomLabels();
