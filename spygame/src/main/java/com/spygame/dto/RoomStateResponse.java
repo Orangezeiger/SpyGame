@@ -15,6 +15,7 @@ public class RoomStateResponse {
     private final int minPlayersToStart;
     private final Long selectedCategoryId;
     private final String selectedCategoryName;
+    private final boolean passwordProtected;
     private final List<PlayerSummary> players;
 
     public RoomStateResponse(
@@ -30,6 +31,7 @@ public class RoomStateResponse {
             int minPlayersToStart,
             Long selectedCategoryId,
             String selectedCategoryName,
+            boolean passwordProtected,
             List<PlayerSummary> players
     ) {
         this.roomId = roomId;
@@ -44,6 +46,7 @@ public class RoomStateResponse {
         this.minPlayersToStart = minPlayersToStart;
         this.selectedCategoryId = selectedCategoryId;
         this.selectedCategoryName = selectedCategoryName;
+        this.passwordProtected = passwordProtected;
         this.players = players;
     }
 
@@ -93,6 +96,10 @@ public class RoomStateResponse {
 
     public String getSelectedCategoryName() {
         return selectedCategoryName;
+    }
+
+    public boolean isPasswordProtected() {
+        return passwordProtected;
     }
 
     public List<PlayerSummary> getPlayers() {

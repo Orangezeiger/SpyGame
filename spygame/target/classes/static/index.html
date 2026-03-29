@@ -9,7 +9,42 @@
 <body>
 <main class="container">
     <div class="topbar">
-        <div class="account-menu">
+        <div class="topbar-menu friends-menu">
+            <button id="friendsMenuBtn" class="account-icon-button" aria-label="Freunde">
+                <svg class="friends-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="9" cy="8" r="3.2"></circle>
+                    <circle cx="16.5" cy="9.5" r="2.6"></circle>
+                    <path d="M4.8 19c1.4-2.6 3.4-3.9 6.2-3.9 2 0 3.6.6 5 1.8"></path>
+                    <path d="M14.4 18.6c1-.9 2.2-1.4 3.7-1.4 1 0 1.8.2 2.6.7"></path>
+                </svg>
+                <span id="friendsOnlineDot" class="status-dot hidden"></span>
+            </button>
+            <div id="friendsDropdown" class="account-dropdown friends-dropdown hidden">
+                <div class="dropdown-header">
+                    <div>
+                        <strong>Freunde</strong>
+                        <p class="hint">Anfragen, Online-Status und offene Lobbys.</p>
+                    </div>
+                </div>
+                <div class="dropdown-section">
+                    <label class="compact-label" for="friendUsernameInput">Benutzername adden</label>
+                    <div class="inline-form">
+                        <input id="friendUsernameInput" type="text" placeholder="Benutzername" />
+                        <button id="sendFriendRequestBtn" class="secondary-button">Add</button>
+                    </div>
+                </div>
+                <div class="dropdown-section">
+                    <strong class="section-title">Anfragen</strong>
+                    <div id="friendRequestsList" class="stack-list empty-state">Noch keine offenen Anfragen.</div>
+                </div>
+                <div class="dropdown-section">
+                    <strong class="section-title">Freunde</strong>
+                    <div id="friendsList" class="stack-list empty-state">Noch keine Freunde gespeichert.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="topbar-menu account-menu">
             <button id="accountMenuBtn" class="account-icon-button" aria-label="Account">
                 <svg id="accountGuestIcon" class="account-guest-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="8" r="4"></circle>
@@ -40,8 +75,11 @@
                     Dein Name
                     <input id="createPlayerName" type="text" placeholder="z.B. Max" />
                 </label>
-                <button id="createRoomBtn">Neue Lobby erstellen</button>
-                <p class="hint">Du wirst automatisch Host der Lobby.</p>
+                <div class="card-actions">
+                    <button id="createRoomBtn">Neue Lobby erstellen</button>
+                    <button id="openCreateOptionsBtn" class="secondary-button">Lobby-Optionen</button>
+                </div>
+                <p id="createPasswordStatus" class="hint">Kein Lobby-Passwort gesetzt.</p>
             </section>
 
             <section class="card">
@@ -54,8 +92,11 @@
                     Lobby-Nummer
                     <input id="roomIdInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="z.B. 482193" />
                 </label>
-                <button id="joinRoomBtn">Lobby beitreten</button>
-                <p class="hint">Die Lobby-ID besteht nur aus Zahlen.</p>
+                <div class="card-actions">
+                    <button id="joinRoomBtn">Lobby beitreten</button>
+                    <button id="openJoinOptionsBtn" class="secondary-button">Passwort / Optionen</button>
+                </div>
+                <p id="joinPasswordStatus" class="hint">Kein Lobby-Passwort gesetzt.</p>
             </section>
         </div>
     </section>
@@ -113,26 +154,8 @@
 
         <section class="card">
             <h2>Spieler in der Lobby</h2>
-            <p class="hint">Der Host darf das Spiel starten. Wenn der Host geht, wird der nächste Spieler automatisch Host.</p>
+            <p class="hint">Doppelte Spielernamen sind in einer Lobby nicht erlaubt.</p>
             <ul id="playersList" class="players"></ul>
-        </section>
-
-        <section class="card">
-            <div class="account-header">
-                <div>
-                    <h2>Eigene Kategorien</h2>
-                    <p id="customCategoryHint" class="hint">Melde dich an, um eigene Kategorien mit eigenen Wörtern zu speichern.</p>
-                </div>
-            </div>
-            <label>
-                Kategoriename
-                <input id="customCategoryName" type="text" placeholder="z.B. Games" />
-            </label>
-            <label>
-                Wörter
-                <textarea id="customCategoryWords" rows="5" placeholder="Je Wort eine Zeile oder mit Komma getrennt"></textarea>
-            </label>
-            <button id="createCategoryBtn">Eigene Kategorie speichern</button>
         </section>
 
         <section class="card log">
@@ -198,6 +221,58 @@
         </label>
         <p id="registerError" class="auth-error hidden"></p>
         <button id="registerBtn">Registrieren</button>
+    </div>
+</div>
+
+<div id="categoryModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal="categoryModal"></div>
+    <div class="modal-card">
+        <button class="modal-close" data-close-modal="categoryModal">x</button>
+        <h3>Eigene Kategorie</h3>
+        <p id="customCategoryHint" class="hint">Melde dich an, um eigene Kategorien mit eigenen Wörtern zu speichern.</p>
+        <label>
+            Kategoriename
+            <input id="customCategoryName" type="text" placeholder="z.B. Games" />
+        </label>
+        <label>
+            Wörter
+            <textarea id="customCategoryWords" rows="5" placeholder="Je Wort eine Zeile oder mit Komma getrennt"></textarea>
+        </label>
+        <p id="categoryError" class="auth-error hidden"></p>
+        <button id="createCategoryBtn">Eigene Kategorie speichern</button>
+    </div>
+</div>
+
+<div id="createOptionsModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal="createOptionsModal"></div>
+    <div class="modal-card">
+        <button class="modal-close" data-close-modal="createOptionsModal">x</button>
+        <h3>Lobby-Optionen</h3>
+        <label>
+            Passwort (optional)
+            <input id="createRoomPassword" type="password" placeholder="Leer lassen fuer offene Lobby" />
+        </label>
+        <p class="hint">Wenn gesetzt, brauchen alle Mitspieler dieses Passwort.</p>
+        <button id="saveCreateOptionsBtn">Speichern</button>
+    </div>
+</div>
+
+<div id="joinOptionsModal" class="modal hidden">
+    <div class="modal-backdrop" data-close-modal="joinOptionsModal"></div>
+    <div class="modal-card">
+        <button class="modal-close" data-close-modal="joinOptionsModal">x</button>
+        <h3 id="joinOptionsTitle">Lobby beitreten</h3>
+        <p id="joinOptionsInfo" class="hint">Setze hier ein Lobby-Passwort, falls eines gebraucht wird.</p>
+        <label>
+            Lobby-Nummer
+            <input id="joinOptionsRoomId" type="text" inputmode="numeric" maxlength="6" placeholder="482193" />
+        </label>
+        <label>
+            Passwort (optional)
+            <input id="joinRoomPassword" type="password" placeholder="Lobby-Passwort" />
+        </label>
+        <p id="joinOptionsError" class="auth-error hidden"></p>
+        <button id="confirmJoinOptionsBtn">Mit diesen Daten beitreten</button>
     </div>
 </div>
 

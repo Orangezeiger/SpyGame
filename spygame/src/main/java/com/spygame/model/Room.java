@@ -15,6 +15,7 @@ public class Room {
     private int imposterCount = 1;
     private Long selectedCategoryId;
     private String selectedCategoryName;
+    private String passwordHash;
 
     public Room() {
     }
@@ -109,5 +110,13 @@ public class Room {
 
     public void setSelectedCategoryName(String selectedCategoryName) {
         this.selectedCategoryName = selectedCategoryName;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

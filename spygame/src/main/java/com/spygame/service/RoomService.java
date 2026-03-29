@@ -8,6 +8,7 @@ import com.spygame.dto.StartGameResponse;
 import com.spygame.model.GameState;
 import com.spygame.model.Player;
 import com.spygame.model.Room;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -23,6 +24,8 @@ public class RoomService {
 
     private final GameStateStore gameStateStore;
     private final CategoryService categoryService;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
     private final SecureRandom random = new SecureRandom();
 
     private final List<String> words = Arrays.asList(
@@ -132,29 +135,41 @@ public class RoomService {
             "Bootsanleger"
     );
 
-    public RoomService(GameStateStore gameStateStore, CategoryService categoryService) {
+    public RoomService(GameStateStore gameStateStore, CategoryService categoryService, UserService userService, PasswordEncoder passwordEncoder) {
         this.gameStateStore = gameStateStore;
         this.categoryService = categoryService;
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public CreateRoomResponse createRoom(String playerName) {
+    public CreateRoomResponse createRoom(String playerName, Long userId, String roomPassword) {
         return gameStateStore.write(state -> {
             String roomId = numericRoomId(state);
             Room room = new Room(roomId);
             state.getRooms().put(roomId, room);
-            String playerId = addPlayer(state, room, playerName);
+            if (roomPassword != null && !roomPassword.trim().isEmpty()) {
+                room.setPasswordHash(passwordEncoder.encode(roomPassword.trim()));
+            }
+            String playerId = addPlayer(state, room, playerName, userId);
             room.setHostPlayerId(playerId);
+            userService.updateRoomPresence(userId, roomId, true, room.getPasswordHash() != null);
             return new CreateRoomResponse(roomId, playerId);
         });
     }
 
-    public JoinRoomResponse joinRoom(String roomId, String playerName) {
+    public JoinRoomResponse joinRoom(String roomId, String playerName, Long userId, String roomPassword) {
         return gameStateStore.write(state -> {
             Room room = requireRoom(state, roomId);
             if (room.isStarted()) {
                 throw new IllegalArgumentException("Game already started");
             }
-            String playerId = addPlayer(state, room, playerName);
+            if (room.getPasswordHash() != null) {
+                if (roomPassword == null || roomPassword.isBlank() || !passwordEncoder.matches(roomPassword.trim(), room.getPasswordHash())) {
+                    throw new IllegalArgumentException("Falsches Lobby-Passwort");
+                }
+            }
+            String playerId = addPlayer(state, room, playerName, userId);
+            userService.updateRoomPresence(userId, roomId, false, room.getPasswordHash() != null);
             return new JoinRoomResponse(roomId, playerId);
         });
     }
@@ -250,6 +265,13 @@ public class RoomService {
             if (room == null) {
                 return null;
             }
+            Player leavingPlayer = room.getPlayers().stream()
+                    .filter(player -> player.getId().equals(playerId))
+                    .findFirst()
+                    .orElse(null);
+            if (leavingPlayer != null) {
+                userService.clearRoomPresence(leavingPlayer.getUserId());
+            }
             room.getPlayers().removeIf(player -> player.getId().equals(playerId));
             room.getSpyPlayerIds().removeIf(spyId -> spyId.equals(playerId));
 
@@ -259,7 +281,9 @@ public class RoomService {
             }
 
             if (playerId.equals(room.getHostPlayerId())) {
-                room.setHostPlayerId(room.getPlayers().get(0).getId());
+                Player newHost = room.getPlayers().get(0);
+                room.setHostPlayerId(newHost.getId());
+                userService.updateRoomPresence(newHost.getUserId(), room.getId(), true, room.getPasswordHash() != null);
             }
 
             room.setImposterCount(Math.min(room.getImposterCount(), maxImposterCount(room.getPlayers().size())));
@@ -267,12 +291,18 @@ public class RoomService {
         });
     }
 
-    private String addPlayer(GameState state, Room room, String playerName) {
+    private String addPlayer(GameState state, Room room, String playerName, Long userId) {
         if (playerName == null || playerName.trim().isEmpty()) {
             throw new IllegalArgumentException("Player name required");
         }
+        String normalizedName = playerName.trim();
+        boolean duplicateName = room.getPlayers().stream()
+                .anyMatch(player -> player.getName().equalsIgnoreCase(normalizedName));
+        if (duplicateName) {
+            throw new IllegalArgumentException("Dieser Name ist in der Lobby bereits vergeben");
+        }
         String playerId = shortId();
-        Player player = new Player(playerId, playerName.trim());
+        Player player = new Player(playerId, normalizedName, userId);
         room.getPlayers().add(player);
         state.getPlayerToRoom().put(playerId, room.getId());
         return playerId;
@@ -349,6 +379,7 @@ public class RoomService {
                 MIN_PLAYERS_TO_START,
                 room.getSelectedCategoryId(),
                 room.getSelectedCategoryName(),
+                room.getPasswordHash() != null,
                 players
         );
     }

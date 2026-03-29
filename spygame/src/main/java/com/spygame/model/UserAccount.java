@@ -28,6 +28,18 @@ public class UserAccount {
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Column
+    private Instant lastSeenAt;
+
+    @Column
+    private String activeRoomCode;
+
+    @Column(nullable = false)
+    private boolean activeRoomHost = false;
+
+    @Column(nullable = false)
+    private boolean activeRoomPasswordProtected = false;
+
     public Long getId() {
         return id;
     }
@@ -58,5 +70,37 @@ public class UserAccount {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getLastSeenAt() {
+        return lastSeenAt;
+    }
+
+    public void setLastSeenAt(Instant lastSeenAt) {
+        this.lastSeenAt = lastSeenAt;
+    }
+
+    public String getActiveRoomCode() {
+        return activeRoomCode;
+    }
+
+    public void setActiveRoomCode(String activeRoomCode) {
+        this.activeRoomCode = activeRoomCode;
+    }
+
+    public boolean isActiveRoomHost() {
+        return activeRoomHost;
+    }
+
+    public void setActiveRoomHost(boolean activeRoomHost) {
+        this.activeRoomHost = activeRoomHost;
+    }
+
+    public boolean isActiveRoomPasswordProtected() {
+        return activeRoomPasswordProtected;
+    }
+
+    public void setActiveRoomPasswordProtected(boolean activeRoomPasswordProtected) {
+        this.activeRoomPasswordProtected = activeRoomPasswordProtected;
     }
 }

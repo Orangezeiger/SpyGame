@@ -28,12 +28,12 @@ public class RoomController {
 
     @PostMapping("/create-room")
     public CreateRoomResponse createRoom(@RequestBody CreateRoomRequest request) {
-        return roomService.createRoom(request.getPlayerName());
+        return roomService.createRoom(request.getPlayerName(), request.getUserId(), request.getRoomPassword());
     }
 
     @PostMapping("/join-room")
     public JoinRoomResponse joinRoom(@RequestBody JoinRoomRequest request) {
-        return roomService.joinRoom(request.getRoomId(), request.getPlayerName());
+        return roomService.joinRoom(request.getRoomId(), request.getPlayerName(), request.getUserId(), request.getRoomPassword());
     }
 
     @PostMapping("/start-game")
