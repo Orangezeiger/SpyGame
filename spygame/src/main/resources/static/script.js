@@ -308,9 +308,18 @@ function renderFriendsOverview(data) {
     state.friends.forEach((friend) => {
       const item = document.createElement("div");
       item.className = "stack-item";
-      const action = friend.joinable
-        ? `<button class="secondary-button" data-join-room="${friend.roomCode}" data-password-protected="${friend.passwordProtected}">Beitreten</button>`
-        : "";
+      const sameRoom = Boolean(state.roomId) && friend.roomCode === state.roomId;
+      const alreadyInLobby = Boolean(state.roomId);
+      let action = "";
+      if (friend.joinable) {
+        if (sameRoom) {
+          action = `<button class="secondary-button" disabled>Schon in dieser Lobby</button>`;
+        } else if (alreadyInLobby) {
+          action = `<button class="secondary-button" disabled>Erst aktuelle Lobby verlassen</button>`;
+        } else {
+          action = `<button class="secondary-button" data-join-room="${friend.roomCode}" data-password-protected="${friend.passwordProtected}">Beitreten</button>`;
+        }
+      }
       const detail = friend.hosting && friend.roomCode
         ? `Hostet Lobby ${friend.roomCode}${friend.passwordProtected ? " (mit Passwort)" : ""}`
         : friend.online ? "Gerade online" : "Offline";
@@ -358,8 +367,8 @@ function startPresenceHeartbeat() {
   }
   pingPresence();
   loadFriends().catch((error) => log(error.message));
-  state.presencePingHandle = setInterval(pingPresence, 10000);
-  state.friendPollHandle = setInterval(() => loadFriends().catch((error) => log(error.message)), 5000);
+  state.presencePingHandle = setInterval(pingPresence, 5000);
+  state.friendPollHandle = setInterval(() => loadFriends().catch((error) => log(error.message)), 3000);
 }
 
 function stopPresenceHeartbeat() {
@@ -523,7 +532,7 @@ function startRoomPolling() {
     return;
   }
   syncRoomState().catch(handleRoomStateError);
-  state.roomPollHandle = setInterval(() => syncRoomState().catch(handleRoomStateError), 2500);
+  state.roomPollHandle = setInterval(() => syncRoomState().catch(handleRoomStateError), 1500);
 }
 
 function stopRoomPolling() {
@@ -840,6 +849,10 @@ friendRequestsList.addEventListener("click", async (event) => {
 friendsList.addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-join-room]");
   if (!button) {
+    return;
+  }
+  if (state.roomId) {
+    log("Verlasse zuerst deine aktuelle Lobby, bevor du einer anderen beitrittst.");
     return;
   }
   const roomCode = sanitizeRoomId(button.dataset.joinRoom);

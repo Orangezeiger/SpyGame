@@ -21,7 +21,7 @@ public class RoomService {
     private static final int MIN_PLAYERS_TO_START = 3;
     private static final int MIN_GAME_DURATION_MINUTES = 3;
     private static final int MAX_GAME_DURATION_MINUTES = 15;
-    private static final long PLAYER_STALE_MILLIS = 45_000;
+    private static final long PLAYER_STALE_MILLIS = 15_000;
 
     private final GameStateStore gameStateStore;
     private final CategoryService categoryService;
