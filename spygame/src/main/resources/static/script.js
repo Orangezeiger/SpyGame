@@ -595,6 +595,12 @@ function disconnectSession() {
   }
   const url = `/presence/offline?${params.toString()}`;
   try {
+    if (navigator.sendBeacon) {
+      const beaconOk = navigator.sendBeacon(url, new Blob([], { type: "text/plain" }));
+      if (beaconOk) {
+        return;
+      }
+    }
     fetch(url, { method: "POST", keepalive: true });
   } catch (_error) {
     // Best-effort disconnect only.
