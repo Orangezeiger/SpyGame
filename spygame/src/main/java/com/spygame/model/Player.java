@@ -1,9 +1,12 @@
 package com.spygame.model;
 
 public class Player {
+    private static final long serialVersionUID = 1L;
+
     private String id;
     private String name;
     private Long userId;
+    private long lastSeenAtEpochMillis = System.currentTimeMillis();
 
     public Player() {
     }
@@ -41,5 +44,13 @@ public class Player {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public long getLastSeenAtEpochMillis() {
+        return lastSeenAtEpochMillis;
+    }
+
+    public void setLastSeenAtEpochMillis(long lastSeenAtEpochMillis) {
+        this.lastSeenAtEpochMillis = lastSeenAtEpochMillis;
     }
 }

@@ -4,6 +4,7 @@ import com.spygame.dto.FriendsOverviewResponse;
 import com.spygame.dto.RespondFriendRequest;
 import com.spygame.dto.SendFriendRequest;
 import com.spygame.service.FriendService;
+import com.spygame.service.RoomService;
 import com.spygame.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,10 +14,12 @@ import java.util.Map;
 public class FriendController {
     private final FriendService friendService;
     private final UserService userService;
+    private final RoomService roomService;
 
-    public FriendController(FriendService friendService, UserService userService) {
+    public FriendController(FriendService friendService, UserService userService, RoomService roomService) {
         this.friendService = friendService;
         this.userService = userService;
+        this.roomService = roomService;
     }
 
     @GetMapping("/friends")
@@ -39,6 +42,15 @@ public class FriendController {
     @PostMapping("/presence/ping")
     public Map<String, String> ping(@RequestParam Long userId) {
         userService.touchPresence(userId);
+        return Map.of("status", "ok");
+    }
+
+    @PostMapping("/presence/offline")
+    public Map<String, String> offline(@RequestParam(required = false) Long userId, @RequestParam(required = false) String playerId) {
+        if (playerId != null && !playerId.isBlank()) {
+            roomService.disconnect(playerId);
+        }
+        userService.markOffline(userId);
         return Map.of("status", "ok");
     }
 }

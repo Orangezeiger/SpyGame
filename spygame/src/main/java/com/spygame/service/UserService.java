@@ -105,4 +105,16 @@ public class UserService {
         user.setActiveRoomPasswordProtected(false);
         userAccountRepository.save(user);
     }
+
+    public void markOffline(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        UserAccount user = requireUser(userId);
+        user.setLastSeenAt(Instant.EPOCH);
+        user.setActiveRoomCode(null);
+        user.setActiveRoomHost(false);
+        user.setActiveRoomPasswordProtected(false);
+        userAccountRepository.save(user);
+    }
 }

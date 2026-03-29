@@ -331,9 +331,9 @@ async function loadFriends() {
   if (!state.userId) {
     setVisibility(friendsOnlineDot, false);
     friendRequestsList.className = "stack-list empty-state";
-    friendRequestsList.textContent = "Melde dich an, um Freundschaften zu verwalten.";
+    friendRequestsList.textContent = "Nicht verfuegbar, solange du abgemeldet bist.";
     friendsList.className = "stack-list empty-state";
-    friendsList.textContent = "Melde dich an, um Online-Freunde zu sehen.";
+    friendsList.textContent = "Nicht verfuegbar, solange du abgemeldet bist.";
     return;
   }
   const data = await fetchJson(`/friends?userId=${encodeURIComponent(state.userId)}`);
@@ -358,8 +358,8 @@ function startPresenceHeartbeat() {
   }
   pingPresence();
   loadFriends().catch((error) => log(error.message));
-  state.presencePingHandle = setInterval(pingPresence, 30000);
-  state.friendPollHandle = setInterval(() => loadFriends().catch((error) => log(error.message)), 15000);
+  state.presencePingHandle = setInterval(pingPresence, 10000);
+  state.friendPollHandle = setInterval(() => loadFriends().catch((error) => log(error.message)), 5000);
 }
 
 function stopPresenceHeartbeat() {
@@ -573,6 +573,25 @@ async function leaveCurrentRoom() {
   }
 }
 
+function disconnectSession() {
+  const params = new URLSearchParams();
+  if (state.userId) {
+    params.set("userId", state.userId);
+  }
+  if (state.playerId) {
+    params.set("playerId", state.playerId);
+  }
+  if (!params.toString()) {
+    return;
+  }
+  const url = `/presence/offline?${params.toString()}`;
+  try {
+    fetch(url, { method: "POST", keepalive: true });
+  } catch (_error) {
+    // Best-effort disconnect only.
+  }
+}
+
 async function copyRoomId() {
   if (!state.roomId) {
     return;
@@ -754,13 +773,20 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
 });
 
 logoutBtn.addEventListener("click", async () => {
+  disconnectSession();
   state.userId = "";
   state.userEmail = "";
   state.username = "";
+  state.playerId = "";
+  state.roomId = "";
+  state.playerName = "";
   updateAuthUi();
   persistSession();
   stopPresenceHeartbeat();
   await loadCategories();
+  await loadFriends();
+  updateRoomLabels();
+  showSetup();
   toggleDropdown(accountDropdown, false);
   toggleDropdown(friendsDropdown, false);
   log("Du bist jetzt abgemeldet.");
@@ -942,6 +968,14 @@ document.addEventListener("click", (event) => {
   }
   if (!event.target.closest(".friends-menu")) {
     toggleDropdown(friendsDropdown, false);
+  }
+});
+
+window.addEventListener("pagehide", disconnectSession);
+window.addEventListener("beforeunload", disconnectSession);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    disconnectSession();
   }
 });
 

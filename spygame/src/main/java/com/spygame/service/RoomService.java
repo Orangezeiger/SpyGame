@@ -21,6 +21,7 @@ public class RoomService {
     private static final int MIN_PLAYERS_TO_START = 3;
     private static final int MIN_GAME_DURATION_MINUTES = 3;
     private static final int MAX_GAME_DURATION_MINUTES = 15;
+    private static final long PLAYER_STALE_MILLIS = 45_000;
 
     private final GameStateStore gameStateStore;
     private final CategoryService categoryService;
@@ -204,6 +205,7 @@ public class RoomService {
 
     public RoleResponse getRole(String playerId) {
         return gameStateStore.read(state -> {
+            pruneStalePlayers(state);
             Room room = findRoomByPlayerId(state, playerId);
             if (!room.isStarted()) {
                 throw new IllegalArgumentException("Game not started");
@@ -216,7 +218,13 @@ public class RoomService {
     }
 
     public RoomStateResponse getRoomState(String roomId, String playerId) {
-        return gameStateStore.read(state -> toRoomStateResponse(requireRoom(state, roomId), playerId));
+        return gameStateStore.write(state -> {
+            pruneStalePlayers(state);
+            if (playerId != null) {
+                touchPlayer(state, playerId);
+            }
+            return toRoomStateResponse(requireRoom(state, roomId), playerId);
+        });
     }
 
     public RoomStateResponse updateRoomSettings(String roomId, String playerId, Integer gameDurationMinutes, Integer imposterCount, Long categoryId) {
@@ -291,6 +299,13 @@ public class RoomService {
         });
     }
 
+    public void disconnect(String playerId) {
+        if (playerId == null || playerId.isBlank()) {
+            return;
+        }
+        leaveRoom(playerId);
+    }
+
     private String addPlayer(GameState state, Room room, String playerName, Long userId) {
         if (playerName == null || playerName.trim().isEmpty()) {
             throw new IllegalArgumentException("Player name required");
@@ -303,6 +318,7 @@ public class RoomService {
         }
         String playerId = shortId();
         Player player = new Player(playerId, normalizedName, userId);
+        player.setLastSeenAtEpochMillis(System.currentTimeMillis());
         room.getPlayers().add(player);
         state.getPlayerToRoom().put(playerId, room.getId());
         return playerId;
@@ -392,5 +408,46 @@ public class RoomService {
                     .toList();
         }
         return words;
+    }
+
+    private void touchPlayer(GameState state, String playerId) {
+        Room room = findRoomByPlayerId(state, playerId);
+        room.getPlayers().stream()
+                .filter(player -> player.getId().equals(playerId))
+                .findFirst()
+                .ifPresent(player -> player.setLastSeenAtEpochMillis(System.currentTimeMillis()));
+    }
+
+    private void pruneStalePlayers(GameState state) {
+        long now = System.currentTimeMillis();
+        List<String> roomIds = new java.util.ArrayList<>(state.getRooms().keySet());
+        for (String roomId : roomIds) {
+            Room room = state.getRooms().get(roomId);
+            if (room == null) {
+                continue;
+            }
+            List<Player> stalePlayers = room.getPlayers().stream()
+                    .filter(player -> now - player.getLastSeenAtEpochMillis() > PLAYER_STALE_MILLIS)
+                    .toList();
+            for (Player stalePlayer : stalePlayers) {
+                state.getPlayerToRoom().remove(stalePlayer.getId());
+                userService.clearRoomPresence(stalePlayer.getUserId());
+            }
+            if (!stalePlayers.isEmpty()) {
+                room.getPlayers().removeIf(player -> stalePlayers.stream().anyMatch(stale -> stale.getId().equals(player.getId())));
+                room.getSpyPlayerIds().removeIf(spyId -> stalePlayers.stream().anyMatch(stale -> stale.getId().equals(spyId)));
+                if (room.getPlayers().isEmpty()) {
+                    state.getRooms().remove(roomId);
+                    continue;
+                }
+                boolean hostMissing = room.getPlayers().stream().noneMatch(player -> player.getId().equals(room.getHostPlayerId()));
+                if (hostMissing) {
+                    Player newHost = room.getPlayers().get(0);
+                    room.setHostPlayerId(newHost.getId());
+                    userService.updateRoomPresence(newHost.getUserId(), room.getId(), true, room.getPasswordHash() != null);
+                }
+                room.setImposterCount(Math.min(room.getImposterCount(), maxImposterCount(room.getPlayers().size())));
+            }
+        }
     }
 }
