@@ -5,6 +5,7 @@ public class UpdateRoomSettingsRequest {
     private String playerId;
     private Integer gameDurationMinutes;
     private Integer imposterCount;
+    private Long categoryId;
 
     public String getRoomId() {
         return roomId;
@@ -36,5 +37,13 @@ public class UpdateRoomSettingsRequest {
 
     public void setImposterCount(Integer imposterCount) {
         this.imposterCount = imposterCount;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 }

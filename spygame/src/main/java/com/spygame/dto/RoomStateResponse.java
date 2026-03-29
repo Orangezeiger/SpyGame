@@ -13,6 +13,8 @@ public class RoomStateResponse {
     private final int imposterCount;
     private final int maxImposterCount;
     private final int minPlayersToStart;
+    private final Long selectedCategoryId;
+    private final String selectedCategoryName;
     private final List<PlayerSummary> players;
 
     public RoomStateResponse(
@@ -26,6 +28,8 @@ public class RoomStateResponse {
             int imposterCount,
             int maxImposterCount,
             int minPlayersToStart,
+            Long selectedCategoryId,
+            String selectedCategoryName,
             List<PlayerSummary> players
     ) {
         this.roomId = roomId;
@@ -38,6 +42,8 @@ public class RoomStateResponse {
         this.imposterCount = imposterCount;
         this.maxImposterCount = maxImposterCount;
         this.minPlayersToStart = minPlayersToStart;
+        this.selectedCategoryId = selectedCategoryId;
+        this.selectedCategoryName = selectedCategoryName;
         this.players = players;
     }
 
@@ -79,6 +85,14 @@ public class RoomStateResponse {
 
     public int getMinPlayersToStart() {
         return minPlayersToStart;
+    }
+
+    public Long getSelectedCategoryId() {
+        return selectedCategoryId;
+    }
+
+    public String getSelectedCategoryName() {
+        return selectedCategoryName;
     }
 
     public List<PlayerSummary> getPlayers() {

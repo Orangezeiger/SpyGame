@@ -57,7 +57,8 @@ public class RoomController {
                 request.getRoomId(),
                 request.getPlayerId(),
                 request.getGameDurationMinutes(),
-                request.getImposterCount()
+                request.getImposterCount(),
+                request.getCategoryId()
         );
     }
 

@@ -13,6 +13,8 @@ public class Room {
     private long startedAtEpochMillis;
     private int gameDurationMinutes = 8;
     private int imposterCount = 1;
+    private Long selectedCategoryId;
+    private String selectedCategoryName;
 
     public Room() {
     }
@@ -91,5 +93,21 @@ public class Room {
 
     public void setImposterCount(int imposterCount) {
         this.imposterCount = imposterCount;
+    }
+
+    public Long getSelectedCategoryId() {
+        return selectedCategoryId;
+    }
+
+    public void setSelectedCategoryId(Long selectedCategoryId) {
+        this.selectedCategoryId = selectedCategoryId;
+    }
+
+    public String getSelectedCategoryName() {
+        return selectedCategoryName;
+    }
+
+    public void setSelectedCategoryName(String selectedCategoryName) {
+        this.selectedCategoryName = selectedCategoryName;
     }
 }

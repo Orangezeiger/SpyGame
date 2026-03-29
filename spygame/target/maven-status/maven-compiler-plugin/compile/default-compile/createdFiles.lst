@@ -1,3 +1,4 @@
+com/spygame/dto/LoginRequest.class
 com/spygame/model/GameState.class
 com/spygame/SpyGameApplication.class
 com/spygame/dto/RegisterUserRequest.class
@@ -25,6 +26,7 @@ com/spygame/model/CategoryWord.class
 com/spygame/dto/UserResponse.class
 com/spygame/repository/UserAccountRepository.class
 com/spygame/controller/AuthController.class
+com/spygame/dto/CreateCategoryRequest.class
 com/spygame/repository/WordCategoryRepository.class
 com/spygame/dto/RoomStateResponse.class
 com/spygame/model/UserAccount.class

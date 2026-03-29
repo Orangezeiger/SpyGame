@@ -68,6 +68,11 @@ h2 {
     margin-top: 0;
 }
 
+h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
 .card {
     background: var(--card);
     border: 1px solid var(--card-border);
@@ -94,6 +99,18 @@ input {
     font-size: 14px;
     background: #141414;
     color: var(--text);
+}
+
+textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #4a4a4a;
+    border-radius: 12px;
+    margin-top: 8px;
+    font-size: 14px;
+    background: #141414;
+    color: var(--text);
+    resize: vertical;
 }
 
 select {
@@ -215,11 +232,51 @@ button:disabled {
     margin-bottom: 14px;
 }
 
+.account-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.auth-layout {
+    align-items: start;
+}
+
+.auth-box {
+    background: rgba(19, 19, 19, 0.7);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px;
+}
+
 .settings-panel {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     margin-bottom: 8px;
+}
+
+.category-panel {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 10px;
+}
+
+.category-selected {
+    background: #141414;
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.category-selected strong {
+    display: block;
+    margin-top: 6px;
+    color: #ffd7d7;
 }
 
 .setting-field label {
@@ -334,6 +391,8 @@ pre#log {
 
 @media (max-width: 600px) {
     .split-layout,
+    .auth-layout,
+    .category-panel,
     .settings-panel,
     .row {
         grid-template-columns: 1fr;
@@ -359,6 +418,10 @@ pre#log {
     .game-topbar {
         justify-content: space-between;
         gap: 8px;
+    }
+    .account-header {
+        align-items: flex-start;
+        flex-direction: column;
     }
     .game-code-button {
         min-width: 0;

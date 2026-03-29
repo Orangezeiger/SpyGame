@@ -2,8 +2,10 @@
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/StartGameResponse.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/StartGameRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/CreateRoomRequest.java
+/Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/LoginRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/controller/AuthController.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/repository/CategoryWordRepository.java
+/Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/CreateCategoryRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/RoleResponse.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/model/WordCategory.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/model/Room.java

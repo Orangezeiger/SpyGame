@@ -1,5 +1,6 @@
 package com.spygame.controller;
 
+import com.spygame.dto.LoginRequest;
 import com.spygame.dto.RegisterUserRequest;
 import com.spygame.dto.UserResponse;
 import com.spygame.service.UserService;
@@ -19,5 +20,10 @@ public class AuthController {
     @PostMapping("/auth/register")
     public UserResponse register(@Valid @RequestBody RegisterUserRequest request) {
         return userService.register(request);
+    }
+
+    @PostMapping("/auth/login")
+    public UserResponse login(@Valid @RequestBody LoginRequest request) {
+        return userService.login(request);
     }
 }

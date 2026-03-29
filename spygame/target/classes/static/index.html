@@ -15,6 +15,47 @@
     </header>
 
     <section id="setupScreen">
+        <section class="card">
+            <div class="account-header">
+                <div>
+                    <h2>Account</h2>
+                    <p id="authStatus" class="hint">Noch nicht angemeldet.</p>
+                </div>
+                <button id="logoutBtn" class="secondary-button hidden">Abmelden</button>
+            </div>
+            <div class="split-layout auth-layout">
+                <div class="auth-box">
+                    <h3>Registrieren</h3>
+                    <label>
+                        Benutzername
+                        <input id="registerUsername" type="text" placeholder="z.B. SpyMaster" />
+                    </label>
+                    <label>
+                        E-Mail
+                        <input id="registerEmail" type="email" placeholder="name@email.de" />
+                    </label>
+                    <label>
+                        Passwort
+                        <input id="registerPassword" type="password" placeholder="Mindestens 6 Zeichen" />
+                    </label>
+                    <button id="registerBtn">Registrieren</button>
+                </div>
+                <div class="auth-box">
+                    <h3>Anmelden</h3>
+                    <label>
+                        E-Mail
+                        <input id="loginEmail" type="email" placeholder="name@email.de" />
+                    </label>
+                    <label>
+                        Passwort
+                        <input id="loginPassword" type="password" placeholder="Passwort" />
+                    </label>
+                    <button id="loginBtn">Anmelden</button>
+                    <p class="hint">Mit Account kannst du eigene Kategorien und Wörter anlegen.</p>
+                </div>
+            </div>
+        </section>
+
         <div class="split-layout">
             <section class="card">
                 <h2>Raum erstellen</h2>
@@ -70,6 +111,16 @@
                     </select>
                 </div>
             </div>
+            <div class="category-panel">
+                <div class="setting-field">
+                    <label for="categorySelect">Kategorie</label>
+                    <select id="categorySelect"></select>
+                </div>
+                <div class="category-selected">
+                    <span class="hint">Aktuelle Kategorie</span>
+                    <strong id="categoryStatus">Standard-Wortpool</strong>
+                </div>
+            </div>
             <p id="settingsHint" class="hint">Mindestens 3 Spieler. Ab 5 Spielern sind 2 Imposter moeglich, ab 7 Spielern 3.</p>
             <div class="room-code-box">
                 <span id="roomCodeLarge">------</span>
@@ -87,6 +138,24 @@
             <h2>Spieler in der Lobby</h2>
             <p class="hint">Der Host darf das Spiel starten. Wenn der Host geht, wird der nächste Spieler automatisch Host.</p>
             <ul id="playersList" class="players"></ul>
+        </section>
+
+        <section class="card">
+            <div class="account-header">
+                <div>
+                    <h2>Eigene Kategorien</h2>
+                    <p id="customCategoryHint" class="hint">Melde dich an, um eigene Kategorien mit eigenen Wörtern zu speichern.</p>
+                </div>
+            </div>
+            <label>
+                Kategoriename
+                <input id="customCategoryName" type="text" placeholder="z.B. Games" />
+            </label>
+            <label>
+                Wörter
+                <textarea id="customCategoryWords" rows="5" placeholder="Je Wort eine Zeile oder mit Komma getrennt"></textarea>
+            </label>
+            <button id="createCategoryBtn">Eigene Kategorie speichern</button>
         </section>
 
         <section class="card log">

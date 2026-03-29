@@ -2,6 +2,7 @@ package com.spygame.service;
 
 import com.spygame.dto.RegisterUserRequest;
 import com.spygame.dto.UserResponse;
+import com.spygame.dto.LoginRequest;
 import com.spygame.model.UserAccount;
 import com.spygame.model.UserStats;
 import com.spygame.repository.UserAccountRepository;
@@ -46,5 +47,19 @@ public class UserService {
         userStatsRepository.save(stats);
 
         return new UserResponse(savedUser.getId(), savedUser.getEmail(), savedUser.getUsername());
+    }
+
+    public UserResponse login(LoginRequest request) {
+        UserAccount user = userAccountRepository.findByEmail(request.getEmail().trim().toLowerCase())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+        return new UserResponse(user.getId(), user.getEmail(), user.getUsername());
+    }
+
+    public UserAccount requireUser(Long userId) {
+        return userAccountRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }

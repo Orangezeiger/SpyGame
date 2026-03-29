@@ -4,12 +4,16 @@ const state = {
   roomId: storage.getItem("roomId") || "",
   playerId: storage.getItem("playerId") || "",
   playerName: storage.getItem("playerName") || "",
+  userId: storage.getItem("userId") || "",
+  userEmail: storage.getItem("userEmail") || "",
+  username: storage.getItem("username") || "",
   screen: "setup",
   roomPollHandle: null,
   timerHandle: null,
   gameDurationSeconds: 8 * 60,
   startedAtEpochMillis: 0,
   roleLoaded: false,
+  categories: [],
 };
 
 const setupScreen = document.getElementById("setupScreen");
@@ -24,6 +28,8 @@ const roleLabel = document.getElementById("roleLabel");
 const wordLabel = document.getElementById("wordLabel");
 const timerLabel = document.getElementById("timerLabel");
 const settingsHint = document.getElementById("settingsHint");
+const authStatus = document.getElementById("authStatus");
+const customCategoryHint = document.getElementById("customCategoryHint");
 const logEl = document.getElementById("log");
 const playersList = document.getElementById("playersList");
 const startGameBtn = document.getElementById("startGameBtn");
@@ -32,6 +38,17 @@ const joinPlayerNameInput = document.getElementById("joinPlayerName");
 const roomIdInput = document.getElementById("roomIdInput");
 const minutesSelect = document.getElementById("minutesSelect");
 const imposterSelect = document.getElementById("imposterSelect");
+const categorySelect = document.getElementById("categorySelect");
+const categoryStatus = document.getElementById("categoryStatus");
+const registerUsernameInput = document.getElementById("registerUsername");
+const registerEmailInput = document.getElementById("registerEmail");
+const registerPasswordInput = document.getElementById("registerPassword");
+const loginEmailInput = document.getElementById("loginEmail");
+const loginPasswordInput = document.getElementById("loginPassword");
+const createCategoryNameInput = document.getElementById("customCategoryName");
+const createCategoryWordsInput = document.getElementById("customCategoryWords");
+const logoutBtn = document.getElementById("logoutBtn");
+const createCategoryBtn = document.getElementById("createCategoryBtn");
 
 function log(message) {
   const ts = new Date().toLocaleTimeString();
@@ -42,12 +59,18 @@ function persistSession() {
   storage.setItem("roomId", state.roomId);
   storage.setItem("playerId", state.playerId);
   storage.setItem("playerName", state.playerName);
+  storage.setItem("userId", state.userId);
+  storage.setItem("userEmail", state.userEmail);
+  storage.setItem("username", state.username);
 }
 
 function clearSession() {
   storage.removeItem("roomId");
   storage.removeItem("playerId");
   storage.removeItem("playerName");
+  storage.removeItem("userId");
+  storage.removeItem("userEmail");
+  storage.removeItem("username");
 }
 
 function updateRoomLabels() {
@@ -56,8 +79,33 @@ function updateRoomLabels() {
   gameRoomCode.textContent = state.roomId || "------";
 }
 
+function updateAuthUi() {
+  const loggedIn = Boolean(state.userId);
+  authStatus.textContent = loggedIn
+    ? `Angemeldet als ${state.username} (${state.userEmail})`
+    : "Noch nicht angemeldet.";
+  customCategoryHint.textContent = loggedIn
+    ? "Deine Kategorie wird zu deinen Standardkategorien hinzugefuegt und ist direkt im Warteraum auswählbar."
+    : "Melde dich an, um eigene Kategorien mit eigenen Wörtern zu speichern.";
+  logoutBtn.classList.toggle("hidden", !loggedIn);
+  createCategoryBtn.disabled = !loggedIn;
+  if (loggedIn && !createPlayerNameInput.value.trim()) {
+    createPlayerNameInput.value = state.username;
+  }
+  if (loggedIn && !joinPlayerNameInput.value.trim()) {
+    joinPlayerNameInput.value = state.username;
+  }
+}
+
 function sanitizeRoomId(value) {
   return value.replace(/\D/g, "").slice(0, 6);
+}
+
+function splitWords(value) {
+  return value
+    .split(/\n|,/)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
 }
 
 function clampImposterOptions(maxImposterCount, selectedCount) {
@@ -68,16 +116,36 @@ function clampImposterOptions(maxImposterCount, selectedCount) {
   imposterSelect.value = String(Math.min(selectedCount, maxImposterCount));
 }
 
-async function updateRoomSettings() {
-  if (!state.roomId || !state.playerId) {
-    return;
-  }
-  const data = await postJson("/room-settings", {
-    roomId: state.roomId,
-    playerId: state.playerId,
-    gameDurationMinutes: Number(minutesSelect.value),
-    imposterCount: Number(imposterSelect.value),
+function renderCategoryOptions(selectedCategoryId, selectedCategoryName) {
+  categorySelect.innerHTML = "";
+
+  const standardOption = document.createElement("option");
+  standardOption.value = "0";
+  standardOption.textContent = "Standard-Wortpool";
+  categorySelect.appendChild(standardOption);
+
+  state.categories.forEach((category) => {
+    const option = document.createElement("option");
+    option.value = String(category.id);
+    option.textContent = category.defaultCategory ? category.name : `${category.name} (deins)`;
+    categorySelect.appendChild(option);
   });
+
+  if (selectedCategoryId && state.categories.some((category) => category.id === selectedCategoryId)) {
+    categorySelect.value = String(selectedCategoryId);
+    categoryStatus.textContent = selectedCategoryName || "Eigene Kategorie";
+  } else {
+    categorySelect.value = "0";
+    categoryStatus.textContent = selectedCategoryName || "Standard-Wortpool";
+  }
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || "Unbekannter Fehler");
+  }
   return data;
 }
 
@@ -101,6 +169,25 @@ async function postWithoutBody(url) {
     throw new Error(data.error || "Unbekannter Fehler");
   }
   return data;
+}
+
+async function loadCategories() {
+  const suffix = state.userId ? `?userId=${encodeURIComponent(state.userId)}` : "";
+  state.categories = await fetchJson(`/categories${suffix}`);
+  renderCategoryOptions(null, null);
+}
+
+async function updateRoomSettings(overrides = {}) {
+  if (!state.roomId || !state.playerId) {
+    return;
+  }
+  return postJson("/room-settings", {
+    roomId: state.roomId,
+    playerId: state.playerId,
+    gameDurationMinutes: overrides.gameDurationMinutes ?? Number(minutesSelect.value),
+    imposterCount: overrides.imposterCount ?? Number(imposterSelect.value),
+    categoryId: overrides.categoryId ?? Number(categorySelect.value),
+  });
 }
 
 function showSetup() {
@@ -148,13 +235,11 @@ function renderPlayers(players, hostPlayerId) {
 }
 
 async function fetchRole() {
-  const res = await fetch(`/role?playerId=${encodeURIComponent(state.playerId)}`);
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || "Unbekannter Fehler");
-  }
+  const data = await fetchJson(`/role?playerId=${encodeURIComponent(state.playerId)}`);
   roleLabel.textContent = data.role === "SPY" ? "Du bist der SPY" : "Du bist ein normaler Spieler";
-  wordLabel.textContent = data.role === "SPY" ? "Du bekommst kein Wort. Bleib cool und bluff dich durch." : `Dein Wort: ${data.word}`;
+  wordLabel.textContent = data.role === "SPY"
+    ? "Du bekommst kein Wort. Bleib cool und bluff dich durch."
+    : `Dein Wort: ${data.word}`;
   state.roleLoaded = true;
 }
 
@@ -192,13 +277,9 @@ async function syncRoomState() {
     return;
   }
 
-  const res = await fetch(
+  const data = await fetchJson(
     `/room-state?roomId=${encodeURIComponent(state.roomId)}&playerId=${encodeURIComponent(state.playerId)}`
   );
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || "Unbekannter Fehler");
-  }
 
   updateRoomLabels();
   renderPlayers(data.players, data.hostPlayerId);
@@ -207,6 +288,8 @@ async function syncRoomState() {
   clampImposterOptions(data.maxImposterCount, data.imposterCount);
   minutesSelect.disabled = !data.host || data.started;
   imposterSelect.disabled = !data.host || data.started;
+  categorySelect.disabled = !data.host || data.started;
+  renderCategoryOptions(data.selectedCategoryId, data.selectedCategoryName);
   settingsHint.textContent = `Mindestens ${data.minPlayersToStart} Spieler. Aktuell sind ${data.players.length} da. Maximal ${data.maxImposterCount} Imposter moeglich.`;
   startGameBtn.disabled = !data.host || data.players.length < data.minPlayersToStart;
   startGameBtn.textContent = !data.host
@@ -215,10 +298,10 @@ async function syncRoomState() {
       ? `Noch ${data.minPlayersToStart - data.players.length} Spieler fehlen`
       : "Spiel starten";
   lobbyStateText.textContent = data.started
-    ? "Spiel startet gerade fuer alle Spieler..."
+    ? `Spiel startet gerade fuer alle Spieler... Kategorie: ${data.selectedCategoryName || "Standard-Wortpool"}`
     : data.host
-      ? "Du bist Host. Stelle Dauer und Imposter ein und starte, sobald genug Spieler da sind."
-      : "Warte, bis der Host das Spiel startet.";
+      ? "Du bist Host. Stelle Dauer, Imposter und Kategorie ein und starte, sobald genug Spieler da sind."
+      : `Warte, bis der Host das Spiel startet. Kategorie: ${data.selectedCategoryName || "Standard-Wortpool"}`;
 
   if (data.started) {
     state.startedAtEpochMillis = data.startedAtEpochMillis;
@@ -248,7 +331,7 @@ function startRoomPolling() {
   syncRoomState().catch(handleRoomStateError);
   state.roomPollHandle = setInterval(() => {
     syncRoomState().catch(handleRoomStateError);
-  }, 2000);
+  }, 2500);
 }
 
 function stopRoomPolling() {
@@ -264,7 +347,7 @@ function resetToSetup(reason) {
   state.playerName = "";
   state.startedAtEpochMillis = 0;
   state.roleLoaded = false;
-  clearSession();
+  persistSession();
   updateRoomLabels();
   playersList.innerHTML = "";
   roleLabel.textContent = "Noch keine Rolle.";
@@ -307,6 +390,84 @@ async function copyRoomId() {
   }
 }
 
+function syncPlayerNameInputs() {
+  if (state.username) {
+    createPlayerNameInput.value = state.username;
+    joinPlayerNameInput.value = state.username;
+  }
+}
+
+async function handleAuthResponse(promise, successMessage) {
+  const user = await promise;
+  state.userId = String(user.id);
+  state.userEmail = user.email;
+  state.username = user.username;
+  updateAuthUi();
+  syncPlayerNameInputs();
+  persistSession();
+  await loadCategories();
+  log(successMessage.replace("{username}", user.username));
+}
+
+document.getElementById("registerBtn").addEventListener("click", async () => {
+  try {
+    await handleAuthResponse(postJson("/auth/register", {
+      username: registerUsernameInput.value.trim(),
+      email: registerEmailInput.value.trim(),
+      password: registerPasswordInput.value,
+    }), "Account fuer {username} erstellt.");
+  } catch (error) {
+    log(error.message);
+  }
+});
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  try {
+    await handleAuthResponse(postJson("/auth/login", {
+      email: loginEmailInput.value.trim(),
+      password: loginPasswordInput.value,
+    }), "{username} ist jetzt angemeldet.");
+  } catch (error) {
+    log(error.message);
+  }
+});
+
+logoutBtn.addEventListener("click", async () => {
+  state.userId = "";
+  state.userEmail = "";
+  state.username = "";
+  updateAuthUi();
+  persistSession();
+  await loadCategories();
+  log("Du bist jetzt abgemeldet.");
+});
+
+document.getElementById("createCategoryBtn").addEventListener("click", async () => {
+  try {
+    if (!state.userId) {
+      log("Bitte melde dich zuerst an.");
+      return;
+    }
+    const words = splitWords(createCategoryWordsInput.value);
+    const category = await postJson("/categories", {
+      userId: Number(state.userId),
+      name: createCategoryNameInput.value.trim(),
+      words,
+    });
+    createCategoryNameInput.value = "";
+    createCategoryWordsInput.value = "";
+    await loadCategories();
+    categorySelect.value = String(category.id);
+    categoryStatus.textContent = category.name;
+    if (state.roomId && state.playerId && hostLabel.textContent === "Host") {
+      await updateRoomSettings({ categoryId: category.id });
+    }
+    log(`Eigene Kategorie "${category.name}" gespeichert.`);
+  } catch (error) {
+    log(error.message);
+  }
+});
+
 document.getElementById("createRoomBtn").addEventListener("click", async () => {
   try {
     const playerName = createPlayerNameInput.value.trim();
@@ -318,6 +479,7 @@ document.getElementById("createRoomBtn").addEventListener("click", async () => {
     persistSession();
     updateRoomLabels();
     showLobby();
+    await syncRoomState();
     log(`Lobby ${state.roomId} erstellt. Du bist der Host.`);
   } catch (error) {
     log(error.message);
@@ -337,6 +499,7 @@ document.getElementById("joinRoomBtn").addEventListener("click", async () => {
     persistSession();
     updateRoomLabels();
     showLobby();
+    await syncRoomState();
     log(`Lobby ${state.roomId} beigetreten.`);
   } catch (error) {
     log(error.message);
@@ -364,31 +527,54 @@ document.getElementById("copyRoomBtnGame").addEventListener("click", copyRoomId)
 document.getElementById("refreshLobbyBtn").addEventListener("click", () => {
   syncRoomState().catch(handleRoomStateError);
 });
+
 minutesSelect.addEventListener("change", async () => {
   try {
-    await updateRoomSettings();
+    await updateRoomSettings({ gameDurationMinutes: Number(minutesSelect.value) });
     log(`Spieldauer auf ${minutesSelect.value} Minuten gesetzt.`);
     await syncRoomState();
   } catch (error) {
     log(error.message);
   }
 });
+
 imposterSelect.addEventListener("change", async () => {
   try {
-    await updateRoomSettings();
+    await updateRoomSettings({ imposterCount: Number(imposterSelect.value) });
     log(`Imposter-Anzahl auf ${imposterSelect.value} gesetzt.`);
     await syncRoomState();
   } catch (error) {
     log(error.message);
   }
 });
+
+categorySelect.addEventListener("change", async () => {
+  try {
+    const categoryId = Number(categorySelect.value);
+    await updateRoomSettings({ categoryId });
+    categoryStatus.textContent = categoryId === 0
+      ? "Standard-Wortpool"
+      : categorySelect.options[categorySelect.selectedIndex].textContent;
+    log(`Kategorie gesetzt: ${categoryStatus.textContent}.`);
+    await syncRoomState();
+  } catch (error) {
+    log(error.message);
+  }
+});
+
 roomIdInput.addEventListener("input", () => {
   roomIdInput.value = sanitizeRoomId(roomIdInput.value);
 });
 
 updateRoomLabels();
-if (state.roomId && state.playerId) {
-  showLobby();
-} else {
-  showSetup();
-}
+updateAuthUi();
+syncPlayerNameInputs();
+loadCategories()
+  .catch((error) => log(error.message))
+  .finally(() => {
+    if (state.roomId && state.playerId) {
+      showLobby();
+    } else {
+      showSetup();
+    }
+  });

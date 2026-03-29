@@ -22,6 +22,7 @@ public class RoomService {
     private static final int MAX_GAME_DURATION_MINUTES = 15;
 
     private final GameStateStore gameStateStore;
+    private final CategoryService categoryService;
     private final SecureRandom random = new SecureRandom();
 
     private final List<String> words = Arrays.asList(
@@ -131,8 +132,9 @@ public class RoomService {
             "Bootsanleger"
     );
 
-    public RoomService(GameStateStore gameStateStore) {
+    public RoomService(GameStateStore gameStateStore, CategoryService categoryService) {
         this.gameStateStore = gameStateStore;
+        this.categoryService = categoryService;
     }
 
     public CreateRoomResponse createRoom(String playerName) {
@@ -169,7 +171,8 @@ public class RoomService {
                     throw new IllegalArgumentException("Need at least 3 players");
                 }
                 validateImposterCount(playerCount, room.getImposterCount());
-                String word = words.get(random.nextInt(words.size()));
+                List<String> pool = resolveWordPool(room);
+                String word = pool.get(random.nextInt(pool.size()));
                 room.getSpyPlayerIds().clear();
                 List<Player> shuffledPlayers = new java.util.ArrayList<>(room.getPlayers());
                 java.util.Collections.shuffle(shuffledPlayers, random);
@@ -201,7 +204,7 @@ public class RoomService {
         return gameStateStore.read(state -> toRoomStateResponse(requireRoom(state, roomId), playerId));
     }
 
-    public RoomStateResponse updateRoomSettings(String roomId, String playerId, Integer gameDurationMinutes, Integer imposterCount) {
+    public RoomStateResponse updateRoomSettings(String roomId, String playerId, Integer gameDurationMinutes, Integer imposterCount, Long categoryId) {
         return gameStateStore.write(state -> {
             Room room = requireRoom(state, roomId);
             if (!playerId.equals(room.getHostPlayerId())) {
@@ -219,6 +222,19 @@ public class RoomService {
             if (imposterCount != null) {
                 validateImposterCount(room.getPlayers().size(), imposterCount);
                 room.setImposterCount(imposterCount);
+            }
+            if (categoryId != null) {
+                if (categoryId <= 0) {
+                    room.setSelectedCategoryId(null);
+                    room.setSelectedCategoryName(null);
+                } else {
+                    var category = categoryService.requireCategory(categoryId);
+                    if (category.getWords().size() < 3) {
+                        throw new IllegalArgumentException("Category needs at least 3 words");
+                    }
+                    room.setSelectedCategoryId(category.getId());
+                    room.setSelectedCategoryName(category.getName());
+                }
             }
             return toRoomStateResponse(room, playerId);
         });
@@ -331,7 +347,19 @@ public class RoomService {
                 effectiveImposterCount,
                 maxImposters,
                 MIN_PLAYERS_TO_START,
+                room.getSelectedCategoryId(),
+                room.getSelectedCategoryName(),
                 players
         );
+    }
+
+    private List<String> resolveWordPool(Room room) {
+        if (room.getSelectedCategoryId() != null) {
+            return categoryService.requireCategory(room.getSelectedCategoryId()).getWords().stream()
+                    .map(word -> word.getValue())
+                    .filter(word -> !word.isBlank())
+                    .toList();
+        }
+        return words;
     }
 }
