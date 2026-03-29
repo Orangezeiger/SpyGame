@@ -7,6 +7,7 @@ import com.spygame.model.UserAccount;
 import com.spygame.model.UserStats;
 import com.spygame.repository.UserAccountRepository;
 import com.spygame.repository.UserStatsRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,19 +29,23 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public UserResponse register(RegisterUserRequest request) {
-        userAccountRepository.findByEmail(request.getEmail().trim().toLowerCase())
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        String normalizedUsername = request.getUsername().trim();
+
+        userAccountRepository.findByEmail(normalizedEmail)
                 .ifPresent(user -> {
                     throw new IllegalArgumentException("Email already in use");
                 });
-        userAccountRepository.findByUsername(request.getUsername().trim())
+        userAccountRepository.findByUsernameIgnoreCase(normalizedUsername)
                 .ifPresent(user -> {
                     throw new IllegalArgumentException("Username already in use");
                 });
 
         UserAccount user = new UserAccount();
-        user.setEmail(request.getEmail().trim().toLowerCase());
-        user.setUsername(request.getUsername().trim());
+        user.setEmail(normalizedEmail);
+        user.setUsername(normalizedUsername);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         UserAccount savedUser = userAccountRepository.save(user);
         savedUser.setLastSeenAt(Instant.now());
