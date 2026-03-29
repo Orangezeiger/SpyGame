@@ -34,10 +34,10 @@ public class UserAccount {
     @Column
     private String activeRoomCode;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean activeRoomHost = false;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean activeRoomPasswordProtected = false;
 
     public Long getId() {

@@ -9,6 +9,7 @@ import com.spygame.model.Room;
 import com.spygame.model.UserAccount;
 import com.spygame.repository.FriendRequestRepository;
 import com.spygame.repository.UserAccountRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -34,6 +35,7 @@ public class FriendService {
         this.gameStateStore = gameStateStore;
     }
 
+    @Transactional
     public void sendRequest(SendFriendRequest request) {
         UserAccount requester = userService.requireUser(request.getRequesterUserId());
         String targetUsername = request.getTargetUsername() == null ? "" : request.getTargetUsername().trim();
@@ -58,6 +60,7 @@ public class FriendService {
         friendRequestRepository.save(friendRequest);
     }
 
+    @Transactional
     public void respond(RespondFriendRequest request) {
         UserAccount receiver = userService.requireUser(request.getUserId());
         FriendRequest friendRequest = friendRequestRepository.findById(request.getRequestId())
@@ -72,6 +75,7 @@ public class FriendService {
         friendRequestRepository.save(friendRequest);
     }
 
+    @Transactional
     public FriendsOverviewResponse overview(Long userId) {
         userService.touchPresence(userId);
         List<FriendsOverviewResponse.FriendSummary> friends = friendRequestRepository.findAcceptedForUser(userId).stream()
