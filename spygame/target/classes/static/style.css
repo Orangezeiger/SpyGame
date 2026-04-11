@@ -521,6 +521,15 @@ pre#log {
     box-shadow: inset 0 0 0 1px rgba(199, 24, 24, 0.25);
 }
 
+.players.compact {
+    margin-top: 14px;
+}
+
+.players li.revealed-spy {
+    border-color: rgba(255, 125, 125, 0.95);
+    background: linear-gradient(180deg, rgba(80, 14, 14, 0.95), rgba(28, 10, 10, 0.95));
+}
+
 .role-text {
     font-size: 24px;
     font-weight: 700;

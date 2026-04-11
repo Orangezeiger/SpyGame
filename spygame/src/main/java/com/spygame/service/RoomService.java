@@ -181,25 +181,28 @@ public class RoomService {
             if (!playerId.equals(room.getHostPlayerId())) {
                 throw new IllegalArgumentException("Only the host can start the game");
             }
-            if (!room.isStarted()) {
-                int playerCount = room.getPlayers().size();
-                if (playerCount < MIN_PLAYERS_TO_START) {
-                    throw new IllegalArgumentException("Need at least 3 players");
-                }
-                validateImposterCount(playerCount, room.getImposterCount());
-                List<String> pool = resolveWordPool(room);
-                String word = pool.get(random.nextInt(pool.size()));
-                room.getSpyPlayerIds().clear();
-                List<Player> shuffledPlayers = new java.util.ArrayList<>(room.getPlayers());
-                java.util.Collections.shuffle(shuffledPlayers, random);
-                for (int index = 0; index < room.getImposterCount(); index++) {
-                    room.getSpyPlayerIds().add(shuffledPlayers.get(index).getId());
-                }
-                room.setWord(word);
-                room.setStartedAtEpochMillis(System.currentTimeMillis());
-                room.setStarted(true);
+            if (room.isStarted() && !isRoundOver(room, System.currentTimeMillis())) {
+                throw new IllegalArgumentException("Game already started");
             }
+            startRound(room);
             return new StartGameResponse(roomId, room.getPlayers().size());
+        });
+    }
+
+    public RoomStateResponse revealImposters(String roomId, String playerId) {
+        return gameStateStore.write(state -> {
+            Room room = requireRoom(state, roomId);
+            if (!playerId.equals(room.getHostPlayerId())) {
+                throw new IllegalArgumentException("Only the host can reveal imposters");
+            }
+            if (!room.isStarted()) {
+                throw new IllegalArgumentException("Game not started");
+            }
+            if (!isRoundOver(room, System.currentTimeMillis())) {
+                throw new IllegalArgumentException("Reveal is only available after the timer ends");
+            }
+            room.setSpiesRevealed(true);
+            return toRoomStateResponse(room, playerId);
         });
     }
 
@@ -373,11 +376,15 @@ public class RoomService {
     }
 
     private RoomStateResponse toRoomStateResponse(Room room, String playerId) {
+        long now = System.currentTimeMillis();
+        long endsAtEpochMillis = room.getStartedAtEpochMillis() + (room.getGameDurationMinutes() * 60_000L);
+        boolean roundEnded = room.isStarted() && isRoundOver(room, now);
         List<RoomStateResponse.PlayerSummary> players = room.getPlayers().stream()
                 .map(player -> new RoomStateResponse.PlayerSummary(
                         player.getId(),
                         player.getName(),
-                        player.getId().equals(room.getHostPlayerId())
+                        player.getId().equals(room.getHostPlayerId()),
+                        room.isSpiesRevealed() && room.getSpyPlayerIds().contains(player.getId())
                 ))
                 .toList();
         int maxImposters = maxImposterCount(room.getPlayers().size());
@@ -385,9 +392,12 @@ public class RoomService {
         return new RoomStateResponse(
                 room.getId(),
                 room.isStarted(),
+                roundEnded,
                 playerId != null && playerId.equals(room.getHostPlayerId()),
                 room.getHostPlayerId(),
+                now,
                 room.getStartedAtEpochMillis(),
+                room.isStarted() ? endsAtEpochMillis : 0,
                 room.getGameDurationMinutes() * 60,
                 room.getGameDurationMinutes(),
                 effectiveImposterCount,
@@ -416,6 +426,34 @@ public class RoomService {
                 .filter(player -> player.getId().equals(playerId))
                 .findFirst()
                 .ifPresent(player -> player.setLastSeenAtEpochMillis(System.currentTimeMillis()));
+    }
+
+    private void startRound(Room room) {
+        int playerCount = room.getPlayers().size();
+        if (playerCount < MIN_PLAYERS_TO_START) {
+            throw new IllegalArgumentException("Need at least 3 players");
+        }
+        validateImposterCount(playerCount, room.getImposterCount());
+        List<String> pool = resolveWordPool(room);
+        String word = pool.get(random.nextInt(pool.size()));
+        room.getSpyPlayerIds().clear();
+        List<Player> shuffledPlayers = new java.util.ArrayList<>(room.getPlayers());
+        java.util.Collections.shuffle(shuffledPlayers, random);
+        for (int index = 0; index < room.getImposterCount(); index++) {
+            room.getSpyPlayerIds().add(shuffledPlayers.get(index).getId());
+        }
+        room.setWord(word);
+        room.setStartedAtEpochMillis(System.currentTimeMillis());
+        room.setStarted(true);
+        room.setSpiesRevealed(false);
+    }
+
+    private boolean isRoundOver(Room room, long now) {
+        if (!room.isStarted() || room.getStartedAtEpochMillis() <= 0) {
+            return false;
+        }
+        long endsAtEpochMillis = room.getStartedAtEpochMillis() + (room.getGameDurationMinutes() * 60_000L);
+        return now >= endsAtEpochMillis;
     }
 
     private void pruneStalePlayers(GameState state) {

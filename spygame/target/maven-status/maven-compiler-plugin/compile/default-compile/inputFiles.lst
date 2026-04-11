@@ -1,6 +1,7 @@
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/service/UserService.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/model/FriendRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/StartGameResponse.java
+/Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/controller/HealthController.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/StartGameRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/CreateRoomRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/LoginRequest.java

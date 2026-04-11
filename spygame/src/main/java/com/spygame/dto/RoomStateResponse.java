@@ -5,9 +5,12 @@ import java.util.List;
 public class RoomStateResponse {
     private final String roomId;
     private final boolean started;
+    private final boolean roundEnded;
     private final boolean host;
     private final String hostPlayerId;
+    private final long serverEpochMillis;
     private final long startedAtEpochMillis;
+    private final long endsAtEpochMillis;
     private final int gameDurationSeconds;
     private final int gameDurationMinutes;
     private final int imposterCount;
@@ -21,9 +24,12 @@ public class RoomStateResponse {
     public RoomStateResponse(
             String roomId,
             boolean started,
+            boolean roundEnded,
             boolean host,
             String hostPlayerId,
+            long serverEpochMillis,
             long startedAtEpochMillis,
+            long endsAtEpochMillis,
             int gameDurationSeconds,
             int gameDurationMinutes,
             int imposterCount,
@@ -36,9 +42,12 @@ public class RoomStateResponse {
     ) {
         this.roomId = roomId;
         this.started = started;
+        this.roundEnded = roundEnded;
         this.host = host;
         this.hostPlayerId = hostPlayerId;
+        this.serverEpochMillis = serverEpochMillis;
         this.startedAtEpochMillis = startedAtEpochMillis;
+        this.endsAtEpochMillis = endsAtEpochMillis;
         this.gameDurationSeconds = gameDurationSeconds;
         this.gameDurationMinutes = gameDurationMinutes;
         this.imposterCount = imposterCount;
@@ -58,6 +67,10 @@ public class RoomStateResponse {
         return started;
     }
 
+    public boolean isRoundEnded() {
+        return roundEnded;
+    }
+
     public boolean isHost() {
         return host;
     }
@@ -66,8 +79,16 @@ public class RoomStateResponse {
         return hostPlayerId;
     }
 
+    public long getServerEpochMillis() {
+        return serverEpochMillis;
+    }
+
     public long getStartedAtEpochMillis() {
         return startedAtEpochMillis;
+    }
+
+    public long getEndsAtEpochMillis() {
+        return endsAtEpochMillis;
     }
 
     public int getGameDurationSeconds() {
@@ -110,11 +131,13 @@ public class RoomStateResponse {
         private final String id;
         private final String name;
         private final boolean host;
+        private final boolean revealedSpy;
 
-        public PlayerSummary(String id, String name, boolean host) {
+        public PlayerSummary(String id, String name, boolean host, boolean revealedSpy) {
             this.id = id;
             this.name = name;
             this.host = host;
+            this.revealedSpy = revealedSpy;
         }
 
         public String getId() {
@@ -127,6 +150,10 @@ public class RoomStateResponse {
 
         public boolean isHost() {
             return host;
+        }
+
+        public boolean isRevealedSpy() {
+            return revealedSpy;
         }
     }
 }

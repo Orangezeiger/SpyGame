@@ -16,6 +16,7 @@ public class Room {
     private Long selectedCategoryId;
     private String selectedCategoryName;
     private String passwordHash;
+    private boolean spiesRevealed;
 
     public Room() {
     }
@@ -118,5 +119,13 @@ public class Room {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public boolean isSpiesRevealed() {
+        return spiesRevealed;
+    }
+
+    public void setSpiesRevealed(boolean spiesRevealed) {
+        this.spiesRevealed = spiesRevealed;
     }
 }

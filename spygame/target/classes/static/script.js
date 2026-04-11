@@ -16,6 +16,8 @@ const state = {
   presencePingHandle: null,
   gameDurationSeconds: 8 * 60,
   startedAtEpochMillis: 0,
+  endsAtEpochMillis: 0,
+  clockOffsetMillis: 0,
   roleLoaded: false,
   categories: [],
   friends: [],
@@ -43,6 +45,7 @@ const lobbyStateText = document.getElementById("lobbyStateText");
 const roleLabel = document.getElementById("roleLabel");
 const wordLabel = document.getElementById("wordLabel");
 const timerLabel = document.getElementById("timerLabel");
+const gameStatusText = document.getElementById("gameStatusText");
 const settingsHint = document.getElementById("settingsHint");
 const authStatus = document.getElementById("authStatus");
 const customCategoryHint = document.getElementById("customCategoryHint");
@@ -86,6 +89,10 @@ const joinOptionsInfo = document.getElementById("joinOptionsInfo");
 const friendUsernameInput = document.getElementById("friendUsernameInput");
 const friendRequestsList = document.getElementById("friendRequestsList");
 const friendsList = document.getElementById("friendsList");
+const gameActions = document.getElementById("gameActions");
+const revealImpostersBtn = document.getElementById("revealImpostersBtn");
+const restartGameBtn = document.getElementById("restartGameBtn");
+const gamePlayersList = document.getElementById("gamePlayersList");
 
 function log(message) {
   const ts = new Date().toLocaleTimeString();
@@ -420,8 +427,8 @@ function showGame() {
   startRoomPolling();
 }
 
-function renderPlayers(players, hostPlayerId) {
-  playersList.innerHTML = "";
+function renderPlayers(target, players, hostPlayerId) {
+  target.innerHTML = "";
   players.forEach((player) => {
     const li = document.createElement("li");
     const parts = [player.name];
@@ -431,11 +438,15 @@ function renderPlayers(players, hostPlayerId) {
     if (player.id === hostPlayerId) {
       parts.push("Host");
     }
+    if (player.revealedSpy) {
+      parts.push("Imposter");
+      li.classList.add("revealed-spy");
+    }
     li.textContent = parts.join(" - ");
     if (player.id === hostPlayerId) {
       li.classList.add("host-player");
     }
-    playersList.appendChild(li);
+    target.appendChild(li);
   });
 }
 
@@ -449,18 +460,18 @@ async function fetchRole() {
 }
 
 function updateTimerFromStart() {
-  if (!state.startedAtEpochMillis) {
+  if (!state.endsAtEpochMillis) {
     timerLabel.textContent = "08:00";
     return;
   }
-  const elapsedSeconds = Math.floor((Date.now() - state.startedAtEpochMillis) / 1000);
-  const remaining = Math.max(0, state.gameDurationSeconds - elapsedSeconds);
+  const estimatedServerNow = Date.now() - state.clockOffsetMillis;
+  const remaining = Math.max(0, Math.floor((state.endsAtEpochMillis - estimatedServerNow) / 1000));
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
   timerLabel.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   if (remaining === 0) {
     stopTimer();
-    lobbyStateText.textContent = "Zeit abgelaufen. Ihr koennt eine neue Runde starten.";
+    gameStatusText.textContent = "Zeit abgelaufen. Der Host kann jetzt den Imposter aufdecken oder direkt eine neue Runde starten.";
   }
 }
 
@@ -483,9 +494,13 @@ async function syncRoomState() {
   }
 
   const data = await fetchJson(`/room-state?roomId=${encodeURIComponent(state.roomId)}&playerId=${encodeURIComponent(state.playerId)}`);
+  const previousStartedAt = state.startedAtEpochMillis;
+  const previousRoundEnded = gameStatusText.dataset.roundEnded === "true";
+  state.clockOffsetMillis = Date.now() - data.serverEpochMillis;
 
   updateRoomLabels();
-  renderPlayers(data.players, data.hostPlayerId);
+  renderPlayers(playersList, data.players, data.hostPlayerId);
+  renderPlayers(gamePlayersList, data.players, data.hostPlayerId);
   hostLabel.textContent = data.host ? "Host" : "Spieler";
   minutesSelect.value = String(data.gameDurationMinutes);
   clampImposterOptions(data.maxImposterCount, data.imposterCount);
@@ -507,7 +522,11 @@ async function syncRoomState() {
       : `Warte, bis der Host das Spiel startet. Kategorie: ${data.selectedCategoryName || "Standard-Wortpool"}`;
 
   if (data.started) {
+    if (previousStartedAt !== data.startedAtEpochMillis) {
+      state.roleLoaded = false;
+    }
     state.startedAtEpochMillis = data.startedAtEpochMillis;
+    state.endsAtEpochMillis = data.endsAtEpochMillis;
     state.gameDurationSeconds = data.gameDurationSeconds;
     if (state.screen !== "game") {
       showGame();
@@ -516,11 +535,44 @@ async function syncRoomState() {
     if (!state.roleLoaded) {
       await fetchRole();
     }
-    startTimer();
+    if (data.roundEnded) {
+      stopTimer();
+      timerLabel.textContent = "00:00";
+      gameStatusText.dataset.roundEnded = "true";
+      gamePlayersList.classList.remove("hidden");
+      setVisibility(gameActions, data.host);
+      setVisibility(revealImpostersBtn, data.host && !data.players.some((player) => player.revealedSpy));
+      setVisibility(restartGameBtn, data.host);
+      if (data.players.some((player) => player.revealedSpy)) {
+        const spyNames = data.players.filter((player) => player.revealedSpy).map((player) => player.name).join(", ");
+        gameStatusText.textContent = `Timer beendet. Aufgedeckte Imposter: ${spyNames}.`;
+      } else {
+        gameStatusText.textContent = data.host
+          ? "Timer beendet. Du kannst jetzt den Imposter fuer alle aufdecken oder direkt eine neue Runde starten."
+          : "Timer beendet. Warte auf den Host, damit der Imposter aufgedeckt oder eine neue Runde gestartet wird.";
+      }
+      if (!previousRoundEnded) {
+        log("Die Runde ist beendet.");
+      }
+    } else {
+      gameStatusText.dataset.roundEnded = "false";
+      gameStatusText.textContent = "Das Spiel laeuft gerade.";
+      gamePlayersList.classList.add("hidden");
+      gameActions.classList.add("hidden");
+      revealImpostersBtn.classList.remove("hidden");
+      restartGameBtn.classList.remove("hidden");
+      startTimer();
+    }
   } else {
     state.roleLoaded = false;
+    state.startedAtEpochMillis = 0;
+    state.endsAtEpochMillis = 0;
     roleLabel.textContent = "Noch keine Rolle.";
     wordLabel.textContent = "";
+    gameStatusText.dataset.roundEnded = "false";
+    gameStatusText.textContent = "Das Spiel laeuft gerade.";
+    gamePlayersList.classList.add("hidden");
+    gameActions.classList.add("hidden");
     if (state.screen !== "lobby") {
       showLobby();
     }
@@ -547,12 +599,17 @@ function resetToSetup(reason) {
   state.playerId = "";
   state.playerName = "";
   state.startedAtEpochMillis = 0;
+  state.endsAtEpochMillis = 0;
+  state.clockOffsetMillis = 0;
   state.roleLoaded = false;
   persistSession();
   updateRoomLabels();
   playersList.innerHTML = "";
+  gamePlayersList.innerHTML = "";
   roleLabel.textContent = "Noch keine Rolle.";
   wordLabel.textContent = "";
+  gameStatusText.dataset.roundEnded = "false";
+  gameStatusText.textContent = "Das Spiel laeuft gerade.";
   showSetup();
   if (reason) {
     log(reason);
@@ -925,6 +982,32 @@ document.getElementById("startGameBtn").addEventListener("click", async () => {
   }
 });
 
+revealImpostersBtn.addEventListener("click", async () => {
+  try {
+    if (!state.roomId || !state.playerId) {
+      return;
+    }
+    await postWithoutBody(`/reveal-imposters?roomId=${encodeURIComponent(state.roomId)}&playerId=${encodeURIComponent(state.playerId)}`);
+    await syncRoomState();
+    log("Imposter wurden fuer alle aufgedeckt.");
+  } catch (error) {
+    log(error.message);
+  }
+});
+
+restartGameBtn.addEventListener("click", async () => {
+  try {
+    if (!state.roomId || !state.playerId) {
+      return;
+    }
+    await postJson("/start-game", { roomId: state.roomId, playerId: state.playerId });
+    await syncRoomState();
+    log("Neue Runde gestartet.");
+  } catch (error) {
+    log(error.message);
+  }
+});
+
 document.getElementById("leaveRoomBtn").addEventListener("click", leaveCurrentRoom);
 document.getElementById("leaveRoomBtnGame").addEventListener("click", leaveCurrentRoom);
 document.getElementById("copyRoomBtn").addEventListener("click", copyRoomId);
@@ -993,8 +1076,14 @@ document.addEventListener("click", (event) => {
 window.addEventListener("pagehide", disconnectSession);
 window.addEventListener("beforeunload", disconnectSession);
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    disconnectSession();
+  if (document.visibilityState === "visible") {
+    if (state.userId) {
+      pingPresence();
+      loadFriends().catch((error) => log(error.message));
+    }
+    if (state.roomId && state.playerId) {
+      syncRoomState().catch(handleRoomStateError);
+    }
   }
 });
 

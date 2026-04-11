@@ -25,6 +25,7 @@ com/spygame/dto/LoginRequest.class
 com/spygame/SpyGameApplication.class
 com/spygame/dto/RegisterUserRequest.class
 com/spygame/repository/FriendRequestRepository.class
+com/spygame/controller/HealthController.class
 com/spygame/dto/JoinRoomResponse.class
 com/spygame/dto/FriendsOverviewResponse$FriendSummary.class
 com/spygame/service/UserService.class

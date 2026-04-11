@@ -41,6 +41,11 @@ public class RoomController {
         return roomService.startGame(request.getRoomId(), request.getPlayerId());
     }
 
+    @PostMapping("/reveal-imposters")
+    public RoomStateResponse revealImposters(@RequestParam String roomId, @RequestParam String playerId) {
+        return roomService.revealImposters(roomId, playerId);
+    }
+
     @GetMapping("/role")
     public RoleResponse role(@RequestParam String playerId) {
         return roomService.getRole(playerId);
