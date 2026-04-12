@@ -131,12 +131,14 @@ public class RoomStateResponse {
         private final String id;
         private final String name;
         private final boolean host;
+        private final boolean online;
         private final boolean revealedSpy;
 
-        public PlayerSummary(String id, String name, boolean host, boolean revealedSpy) {
+        public PlayerSummary(String id, String name, boolean host, boolean online, boolean revealedSpy) {
             this.id = id;
             this.name = name;
             this.host = host;
+            this.online = online;
             this.revealedSpy = revealedSpy;
         }
 
@@ -150,6 +152,10 @@ public class RoomStateResponse {
 
         public boolean isHost() {
             return host;
+        }
+
+        public boolean isOnline() {
+            return online;
         }
 
         public boolean isRevealedSpy() {

@@ -18,6 +18,7 @@ const state = {
   startedAtEpochMillis: 0,
   endsAtEpochMillis: 0,
   clockOffsetMillis: 0,
+  roleCardFlipped: false,
   roleLoaded: false,
   categories: [],
   friends: [],
@@ -96,6 +97,7 @@ const gameActions = document.getElementById("gameActions");
 const revealImpostersBtn = document.getElementById("revealImpostersBtn");
 const restartGameBtn = document.getElementById("restartGameBtn");
 const gamePlayersList = document.getElementById("gamePlayersList");
+const roleCard = document.getElementById("roleCard");
 
 function log(message) {
   const ts = new Date().toLocaleTimeString();
@@ -443,6 +445,11 @@ function showGame() {
   startRoomPolling();
 }
 
+function setRoleCardFlipped(flipped) {
+  state.roleCardFlipped = flipped;
+  roleCard.classList.toggle("is-flipped", flipped);
+}
+
 function renderPlayers(target, players, hostPlayerId) {
   target.innerHTML = "";
   players.forEach((player) => {
@@ -454,9 +461,13 @@ function renderPlayers(target, players, hostPlayerId) {
     if (player.id === hostPlayerId) {
       parts.push("Host");
     }
+    parts.push(player.online ? "online" : "offline");
     if (player.revealedSpy) {
       parts.push("Imposter");
       li.classList.add("revealed-spy");
+    }
+    if (!player.online) {
+      li.classList.add("player-offline");
     }
     li.textContent = parts.join(" - ");
     if (player.id === hostPlayerId) {
@@ -541,6 +552,7 @@ async function syncRoomState() {
   if (data.started) {
     if (previousStartedAt !== data.startedAtEpochMillis) {
       state.roleLoaded = false;
+      setRoleCardFlipped(false);
     }
     state.startedAtEpochMillis = data.startedAtEpochMillis;
     state.endsAtEpochMillis = data.endsAtEpochMillis;
@@ -584,6 +596,7 @@ async function syncRoomState() {
     state.roleLoaded = false;
     state.startedAtEpochMillis = 0;
     state.endsAtEpochMillis = 0;
+    setRoleCardFlipped(false);
     roleLabel.textContent = "Noch keine Rolle.";
     wordLabel.textContent = "";
     gameStatusText.dataset.roundEnded = "false";
@@ -620,6 +633,7 @@ function resetToSetup(reason) {
   state.endsAtEpochMillis = 0;
   state.clockOffsetMillis = 0;
   state.roleLoaded = false;
+  setRoleCardFlipped(false);
   persistSession();
   updateRoomLabels();
   playersList.innerHTML = "";
@@ -659,17 +673,10 @@ async function leaveCurrentRoom() {
 }
 
 function disconnectSession() {
-  const params = new URLSearchParams();
-  if (state.userId) {
-    params.set("userId", state.userId);
-  }
-  if (state.playerId) {
-    params.set("playerId", state.playerId);
-  }
-  if (!params.toString()) {
+  if (!state.userId) {
     return;
   }
-  const url = `/presence/offline?${params.toString()}`;
+  const url = `/presence/offline?userId=${encodeURIComponent(state.userId)}`;
   try {
     if (navigator.sendBeacon) {
       const beaconOk = navigator.sendBeacon(url, new Blob([], { type: "text/plain" }));
@@ -1028,6 +1035,12 @@ restartGameBtn.addEventListener("click", async () => {
 });
 
 randomStarterBtn.addEventListener("click", pickRandomStarter);
+roleCard.addEventListener("click", () => {
+  if (!state.roleLoaded) {
+    return;
+  }
+  setRoleCardFlipped(!state.roleCardFlipped);
+});
 
 document.getElementById("leaveRoomBtn").addEventListener("click", leaveCurrentRoom);
 document.getElementById("leaveRoomBtnGame").addEventListener("click", leaveCurrentRoom);

@@ -3,8 +3,33 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SpyGame</title>
+    <title>SpyGame | Multiplayer Party Game fuer Freunde und Runden</title>
+    <meta name="description" content="SpyGame ist ein modernes Multiplayer-Partyspiel fuer Freunde, Lobbys und schnelle Spielrunden direkt im Browser." />
+    <meta name="author" content="Max Siepsiak" />
+    <meta name="robots" content="index,follow" />
+    <meta name="theme-color" content="#121212" />
+    <meta property="og:title" content="SpyGame | Multiplayer Party Game" />
+    <meta property="og:description" content="Erstelle private Lobbys, starte schnelle Runden und spiele SpyGame direkt im Browser." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="de_DE" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="SpyGame | Multiplayer Party Game" />
+    <meta name="twitter:description" content="Private Lobbys, flexible Spielrunden und schnelle Rollenaufdeckung fuer dein Partyspiel im Browser." />
     <link rel="stylesheet" href="style.css" />
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "SpyGame",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Web",
+            "author": {
+                "@type": "Person",
+                "name": "Max Siepsiak"
+            },
+            "description": "SpyGame ist ein browserbasiertes Multiplayer-Partyspiel mit privaten Lobbys, Rollen, Kategorien und schnellen Spielrunden."
+        }
+    </script>
 </head>
 <body>
 <main class="container">
@@ -65,7 +90,23 @@
         <p class="eyebrow">Multiplayer Party Game</p>
         <h1>SpyGame</h1>
         <p class="hero-copy">Ein Host erstellt die Lobby. Alle anderen treten bei. Sobald das Spiel startet, landet jeder automatisch im Spielraum.</p>
+        <p class="hero-copy hero-copy-secondary">Professionell aufgesetzt fuer schnelle Freundesrunden: private Lobby-Codes, Passwortschutz, Kategorien, Freundesystem und saubere mobile Nutzung.</p>
     </header>
+
+    <section class="feature-grid" aria-label="Produktvorteile">
+        <article class="feature-card">
+            <h2>Schnelle private Lobbys</h2>
+            <p>Erstelle in Sekunden geschuetzte Spielraeume mit Code und optionalem Passwort.</p>
+        </article>
+        <article class="feature-card">
+            <h2>Optimiert fuer Gruppen</h2>
+            <p>Flexible Spielzeit, mehrere Imposter und gemeinsame Kategorien fuer verschieden grosse Runden.</p>
+        </article>
+        <article class="feature-card">
+            <h2>Bereit fuer Mobile</h2>
+            <p>Das Interface ist auf Handy-Nutzung ausgelegt und bleibt auch beim Wechsel zwischen Ansichten stabil.</p>
+        </article>
+    </section>
 
     <section id="setupScreen">
         <div class="split-layout">
@@ -180,8 +221,17 @@
                 <span>Timer:</span>
                 <strong id="timerLabel">08:00</strong>
             </div>
-            <p id="roleLabel" class="role-text">Noch keine Rolle.</p>
-            <p id="wordLabel" class="word-text"></p>
+            <button id="roleCard" class="role-card" type="button" aria-label="Rollenkarte umdrehen">
+                <span class="role-card-face role-card-front">
+                    <span class="role-card-kicker">Rollenkarte</span>
+                    <strong>Tippe hier, um deine Karte aufzudecken</strong>
+                    <span class="hint">So musst du deinen Bildschirm nicht verstecken.</span>
+                </span>
+                <span class="role-card-face role-card-back">
+                    <span id="roleLabel" class="role-text">Noch keine Rolle.</span>
+                    <span id="wordLabel" class="word-text"></span>
+                </span>
+            </button>
             <p id="gameStatusText" class="hint">Das Spiel laeuft gerade.</p>
             <div id="gameActions" class="row hidden">
                 <button id="revealImpostersBtn">Imposter aufdecken</button>
@@ -190,7 +240,21 @@
             <ul id="gamePlayersList" class="players compact hidden"></ul>
         </section>
     </section>
+
+    <section class="card info-card">
+        <h2>Warum SpyGame?</h2>
+        <p>SpyGame verbindet eine klare Browser-Oberflaeche mit strukturierter API-Logik im Hintergrund. So bleibt das Spiel leichtgewichtig fuer Gruppen, aber professionell genug fuer stabile Nutzung auf Desktop und Mobilgeraeten.</p>
+        <p>Ideal fuer Freundesgruppen, spontane Spielabende und private Runden mit schneller Einrichtung.</p>
+    </section>
 </main>
+
+<footer class="site-footer">
+    <div>
+        <strong>SpyGame</strong>
+        <p>Konzipiert und weiterentwickelt von Max Siepsiak.</p>
+    </div>
+    <p class="hint">Multiplayer Party Game im Browser mit Lobby-System, Rollenkarte und mobilen Spielrunden.</p>
+</footer>
 
 <div id="loginModal" class="modal hidden">
     <div class="modal-backdrop" data-close-modal="loginModal"></div>
