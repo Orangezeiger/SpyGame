@@ -14,6 +14,7 @@ com/spygame/dto/CreateRoomRequest.class
 com/spygame/dto/CategoryResponse.class
 com/spygame/service/RoomService.class
 com/spygame/dto/JoinRoomRequest.class
+com/spygame/controller/SitemapController.class
 com/spygame/controller/AuthController.class
 com/spygame/dto/RoomStateResponse.class
 com/spygame/model/UserAccount.class

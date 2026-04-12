@@ -7,6 +7,7 @@
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/LoginRequest.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/repository/FriendRequestRepository.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/controller/AuthController.java
+/Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/controller/SitemapController.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/repository/CategoryWordRepository.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/model/FriendRequestStatus.java
 /Users/orangezeiger/Documents/New project/spygame/src/main/java/com/spygame/dto/CreateCategoryRequest.java
