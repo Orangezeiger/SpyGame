@@ -58,10 +58,10 @@ Alle Spieler bekommen ein gemeinsames Wort, eine oder mehrere Personen sind die 
 
 ## Regeln für Imposter
 
-- Mindestanzahl Spieler zum Start: 3
-- Bei 3-4 Spielern: maximal 1 Imposter
-- Ab 5 Spielern: maximal 2 Imposter
-- Ab 7 Spielern: maximal 3 Imposter
+- Mindestanzahl Spieler zum Start: `3`
+- Bei `3-4` Spielern: maximal `1` Imposter
+- Ab `5` Spielern: maximal `2` Imposter
+- Ab `7` Spielern: maximal `3` Imposter
 
 ## Benutzerfunktionen
 
@@ -76,6 +76,7 @@ Angemeldete Benutzer können:
 
 ## Projektstruktur
 
+```text
 spygame/
 ├── src/main/java/com/spygame/
 │   ├── config/
