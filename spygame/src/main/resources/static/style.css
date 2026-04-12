@@ -378,6 +378,13 @@ button:disabled {
     color: var(--muted);
 }
 
+.random-result {
+    min-height: 18px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .status {
     display: grid;
     grid-template-columns: 1fr 1fr;

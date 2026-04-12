@@ -25,6 +25,7 @@ const state = {
   joinRoomPassword: "",
   selectedCategoryIdBeforeModal: "0",
   pendingJoinRoomId: "",
+  currentPlayers: [],
 };
 
 const setupScreen = document.getElementById("setupScreen");
@@ -42,6 +43,7 @@ const roomCodeLarge = document.getElementById("roomCodeLarge");
 const gameRoomCode = document.getElementById("gameRoomCode");
 const hostLabel = document.getElementById("hostLabel");
 const lobbyStateText = document.getElementById("lobbyStateText");
+const randomStarterResult = document.getElementById("randomStarterResult");
 const roleLabel = document.getElementById("roleLabel");
 const wordLabel = document.getElementById("wordLabel");
 const timerLabel = document.getElementById("timerLabel");
@@ -52,6 +54,7 @@ const customCategoryHint = document.getElementById("customCategoryHint");
 const logEl = document.getElementById("log");
 const playersList = document.getElementById("playersList");
 const startGameBtn = document.getElementById("startGameBtn");
+const randomStarterBtn = document.getElementById("randomStarterBtn");
 const createPlayerNameInput = document.getElementById("createPlayerName");
 const joinPlayerNameInput = document.getElementById("joinPlayerName");
 const roomIdInput = document.getElementById("roomIdInput");
@@ -217,6 +220,19 @@ function clampImposterOptions(maxImposterCount, selectedCount) {
     option.disabled = optionValue > maxImposterCount;
   });
   imposterSelect.value = String(Math.min(selectedCount, maxImposterCount));
+}
+
+function pickRandomStarter() {
+  if (!state.currentPlayers.length) {
+    log("Es sind noch keine Spieler in der Lobby.");
+    return;
+  }
+  const starter = state.currentPlayers[Math.floor(Math.random() * state.currentPlayers.length)];
+  const starterText = starter.id === state.playerId
+    ? `${starter.name} beginnt - also du.`
+    : `${starter.name} beginnt diese Runde.`;
+  randomStarterResult.textContent = starterText;
+  log(`Starter randomisiert: ${starter.name}`);
 }
 
 function renderCategoryOptions(selectedCategoryId, selectedCategoryName) {
@@ -501,6 +517,7 @@ async function syncRoomState() {
   updateRoomLabels();
   renderPlayers(playersList, data.players, data.hostPlayerId);
   renderPlayers(gamePlayersList, data.players, data.hostPlayerId);
+  state.currentPlayers = Array.isArray(data.players) ? data.players : [];
   hostLabel.textContent = data.host ? "Host" : "Spieler";
   minutesSelect.value = String(data.gameDurationMinutes);
   clampImposterOptions(data.maxImposterCount, data.imposterCount);
@@ -598,6 +615,7 @@ function resetToSetup(reason) {
   state.roomId = "";
   state.playerId = "";
   state.playerName = "";
+  state.currentPlayers = [];
   state.startedAtEpochMillis = 0;
   state.endsAtEpochMillis = 0;
   state.clockOffsetMillis = 0;
@@ -610,6 +628,7 @@ function resetToSetup(reason) {
   wordLabel.textContent = "";
   gameStatusText.dataset.roundEnded = "false";
   gameStatusText.textContent = "Das Spiel laeuft gerade.";
+  randomStarterResult.textContent = "Noch niemand ausgewaehlt.";
   showSetup();
   if (reason) {
     log(reason);
@@ -1007,6 +1026,8 @@ restartGameBtn.addEventListener("click", async () => {
     log(error.message);
   }
 });
+
+randomStarterBtn.addEventListener("click", pickRandomStarter);
 
 document.getElementById("leaveRoomBtn").addEventListener("click", leaveCurrentRoom);
 document.getElementById("leaveRoomBtnGame").addEventListener("click", leaveCurrentRoom);
