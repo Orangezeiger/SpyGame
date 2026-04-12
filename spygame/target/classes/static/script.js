@@ -1087,6 +1087,8 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+//small comment for the ach
+
 updateRoomLabels();
 updatePasswordHints();
 updateAuthUi();
