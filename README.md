@@ -39,8 +39,7 @@ Alle Spieler bekommen ein gemeinsames Wort, eine oder mehrere Personen sind die 
 - PostgreSQL
 
 ### Hosting
-- Azure App Service für die Web-App
-- PostgreSQL aktuell extern angebunden
+- Sowohl PostgreSQL als auch die Spring Boot App läuft auf einem Homelab
 
 ## Spielablauf
 
